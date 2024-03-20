@@ -9,7 +9,7 @@ go install github.com/nikolaydubina/go-enum-encoding@latest
 ```
 
 * 150 LOC
-* simple
+* simple, fast[^1], and strict[^1]
 * no dependencies, no template
 * works with different enum implementations (`iota`, `struct`, `string`)
 * generates tests
@@ -61,10 +61,8 @@ func (c Color) MarshalText() ([]byte, error) { return []byte(c.String()), nil }
 func (c Color) String() string { return colors[c] }
 ```
 
-## Context
-
-Comparison to other enums methods: http://github.com/nikolaydubina/go-enum-example
-
 ## Related Work and References
 
 - http://github.com/zarldev/goenums - does much more advanced struct generation, generates all enum utilities besides encoding, does not generate tests, has slightly different notation for tests
+
+[^1]: Comparison to other enums methods: http://github.com/nikolaydubina/go-enum-example
