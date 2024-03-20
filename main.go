@@ -31,18 +31,24 @@ func main() {
 	flag.StringVar(&typeName, "type", "", "type to be generated for")
 	flag.Parse()
 
+	if err := process(typeName, fileName, packageName); err != nil {
+		log.Fatalf("cannot process: %s", err)
+	}
+}
+
+func process(typeName string, fileName string, packageName string) error {
 	if typeName == "" || fileName == "" || packageName == "" {
-		log.Fatal("type, file and package name must be provided")
+		return fmt.Errorf("type, file and package name must be provided")
 	}
 
 	inputCode, err := os.ReadFile(fileName)
 	if err != nil {
-		log.Fatalf("cannot read file(%s): %s", fileName, err)
+		return fmt.Errorf("cannot read file(%s): %s", fileName, err)
 	}
 
 	f, err := parser.ParseFile(token.NewFileSet(), fileName, inputCode, parser.ParseComments)
 	if err != nil {
-		log.Fatalf("cannot parse file(%s): %s", fileName, err)
+		return fmt.Errorf("cannot parse file(%s): %s", fileName, err)
 	}
 
 	specs := make(map[string]string)
@@ -80,7 +86,7 @@ func main() {
 	code = bytes.ReplaceAll(code, []byte("{{.json_to_value}}"), []byte(strings.Join(jsonToVal(specs), "\n")))
 
 	if err := writeCode(code, filepath.Join(filepath.Dir(fileName), strings.ToLower(typeName)+"_enum_encoding.go")); err != nil {
-		log.Fatalf("cannot write code: %s", err)
+		return fmt.Errorf("cannot write code: %s", err)
 	}
 
 	test := templateTest
@@ -90,8 +96,10 @@ func main() {
 	test = bytes.ReplaceAll(test, []byte("{{.Tags}}"), []byte(strings.Join(tags(specs), ",")))
 
 	if err := writeCode(test, filepath.Join(filepath.Dir(fileName), strings.ToLower(typeName)+"_enum_encoding_test.go")); err != nil {
-		log.Fatalf("cannot write test: %s", err)
+		return fmt.Errorf("cannot write test: %s", err)
 	}
+
+	return nil
 }
 
 func valToJson(specs map[string]string) (res []string) {
