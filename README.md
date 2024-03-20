@@ -63,6 +63,6 @@ func (c Color) String() string { return colors[c] }
 
 ## Related Work and References
 
-- http://github.com/zarldev/goenums - does much more advanced struct generation, generates all enum utilities besides encoding, does not generate tests, has slightly different notation for tests
+- http://github.com/zarldev/goenums - does much more advanced struct generation, generates all enum utilities besides encoding, does not generate tests, uses similar notation to trigger go:generate but with different comment directivs (non-json field tags)
 
 [^1]: Comparison to other enums methods: http://github.com/nikolaydubina/go-enum-example
