@@ -1,5 +1,7 @@
 # go-enum-encoding
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/nikolaydubina/go-enum-encoding)](https://goreportcard.com/report/github.com/nikolaydubina/go-enum-encoding)
+
 ```bash
 go install github.com/nikolaydubina/go-enum-encoding
 ```
