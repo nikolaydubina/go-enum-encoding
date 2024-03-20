@@ -67,4 +67,4 @@ Comparison to other enums methods: http://github.com/nikolaydubina/go-enum-examp
 
 ## Related Work and References
 
-- http://github.com/zarldev/goenums - does much more advanced struct generation, generates all enum utilities, does not generate tests 
+- http://github.com/zarldev/goenums - does much more advanced struct generation, generates all enum utilities besides encoding, does not generate tests, has slightly different notation for tests
