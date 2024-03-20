@@ -1,2 +1,66 @@
 # go-enum-encoding
-Generate Go enum encoding
+
+```bash
+go install github.com/nikolaydubina/go-enum-encoding
+```
+
+* 150 LOC
+* simple
+* no dependencies, no template
+* works with different enum implementations (`iota`, `struct`, `string`)
+* generates tests
+
+given
+```go
+
+type Color struct{ c uint }
+
+//go:generate go-enum-encoding -type=Color
+var (
+	Undefined = Color{}  // json:"-"
+	Red       = Color{1} // json:"red"
+	Green     = Color{2} // json:"green"
+	Blue      = Color{3} // json:"blue"
+)
+```
+
+generates encoding and decoding routines and tests 
+```go
+package main
+
+import "errors"
+
+var ErrUnknownColor = errors.New("unknown color")
+
+var colors = map[Color]string{
+	Red:   "red",
+	Green: "green",
+	Blue:  "blue",
+}
+
+var colors_inv = map[string]Color{
+	"red":   Red,
+	"green": Green,
+	"blue":  Blue,
+}
+
+func (s *Color) UnmarshalText(text []byte) error {
+	*s = colors_inv[string(text)]
+	if *s == Undefined {
+		return ErrUnknownColor
+	}
+	return nil
+}
+
+func (c Color) MarshalText() ([]byte, error) { return []byte(c.String()), nil }
+
+func (c Color) String() string { return colors[c] }
+```
+
+## Context
+
+Comparison to other enums methods: http://github.com/nikolaydubina/go-enum-example
+
+## Related Work and References
+
+- http://github.com/zarldev/goenums - does much more advanced struct generation, generates all enum utilities, does not generate tests 
