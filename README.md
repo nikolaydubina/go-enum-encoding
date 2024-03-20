@@ -4,7 +4,7 @@
 [![codecov](https://codecov.io/gh/nikolaydubina/go-enum-encoding/graph/badge.svg?token=asZfIddrLV)](https://codecov.io/gh/nikolaydubina/go-enum-encoding)
 
 ```bash
-go install github.com/nikolaydubina/go-enum-encoding
+go install github.com/nikolaydubina/go-enum-encoding@latest
 ```
 
 * 150 LOC
