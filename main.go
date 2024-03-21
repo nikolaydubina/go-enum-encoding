@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	_ "embed"
+	"errors"
 	"flag"
 	"fmt"
 	"go/ast"
@@ -85,21 +86,16 @@ func process(typeName string, fileName string, packageName string) error {
 	code = bytes.ReplaceAll(code, []byte("{{.val_to_json}}"), []byte(strings.Join(valToJson(specs), "\n")))
 	code = bytes.ReplaceAll(code, []byte("{{.json_to_value}}"), []byte(strings.Join(jsonToVal(specs), "\n")))
 
-	if err := writeCode(code, filepath.Join(filepath.Dir(fileName), strings.ToLower(typeName)+"_enum_encoding.go")); err != nil {
-		return fmt.Errorf("cannot write code: %s", err)
-	}
-
 	test := templateTest
 	test = bytes.ReplaceAll(test, []byte("{{.Type}}"), []byte(typeName))
 	test = bytes.ReplaceAll(test, []byte("{{.Package}}"), []byte(packageName))
 	test = bytes.ReplaceAll(test, []byte("{{.Values}}"), []byte(strings.Join(vals(specs), ", ")))
 	test = bytes.ReplaceAll(test, []byte("{{.Tags}}"), []byte(strings.Join(tags(specs), ",")))
 
-	if err := writeCode(test, filepath.Join(filepath.Dir(fileName), strings.ToLower(typeName)+"_enum_encoding_test.go")); err != nil {
-		return fmt.Errorf("cannot write test: %s", err)
-	}
-
-	return nil
+	return errors.Join(
+		writeCode(code, filepath.Join(filepath.Dir(fileName), strings.ToLower(typeName)+"_enum_encoding.go")),
+		writeCode(test, filepath.Join(filepath.Dir(fileName), strings.ToLower(typeName)+"_enum_encoding_test.go")),
+	)
 }
 
 func valToJson(specs map[string]string) (res []string) {
