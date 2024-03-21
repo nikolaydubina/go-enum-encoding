@@ -19,7 +19,7 @@ go install github.com/nikolaydubina/go-enum-encoding@latest
 given
 ```go
 
-type Color struct{ c uint }
+type Color struct{ c uint8 }
 
 //go:generate go-enum-encoding -type=Color
 var (
