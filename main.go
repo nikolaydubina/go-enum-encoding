@@ -72,13 +72,20 @@ func process(typeName string, fileName string, packageName string) error {
 				break
 			}
 		}
-		if jsonTag == "" || jsonTag == "-" {
+		if jsonTag == "" {
 			return false
 		}
 
 		specs[spec.Names[0].Name] = jsonTag
 		return false
 	})
+
+	if tag, ok := specs["Undefined"+typeName]; !ok {
+		return fmt.Errorf(`missing enum symbol("%s") for type(%s)`, "Undefined"+typeName, typeName)
+	} else if tag != "-" {
+		return fmt.Errorf(`json tag for Undefined value must be "-" but got "%s"`, tag)
+	}
+	delete(specs, "Undefined"+typeName)
 
 	code := templateCode
 	code = bytes.ReplaceAll(code, []byte("{{.Type}}"), []byte(typeName))
