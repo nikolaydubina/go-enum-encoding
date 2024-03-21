@@ -9,7 +9,7 @@ type Color struct{ c uint }
 
 //go:generate go-enum-encoding -type=Color
 var (
-	Undefined      = Color{}            // json:"-"
+	UndefinedColor = Color{}            // json:"-"
 	Red            = Color{1}           // json:"red"
 	Green          = Color{2}           // json:"green"
 	Blue           = Color{3}           // json:"blue"

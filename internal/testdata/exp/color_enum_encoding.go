@@ -19,7 +19,7 @@ var vals_inv_Color = map[string]Color{
 
 func (s *Color) UnmarshalText(text []byte) error {
 	*s = vals_inv_Color[string(text)]
-	if *s == Undefined {
+	if *s == UndefinedColor {
 		return ErrUnknownColor
 	}
 	return nil
