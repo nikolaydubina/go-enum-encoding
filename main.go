@@ -32,7 +32,6 @@ var (
 func main() {
 	flag.StringVar(&typeName, "type", "", "type to be generated for")
 	flag.Parse()
-
 	if err := process(typeName, fileName, packageName); err != nil {
 		log.Fatalf("cannot process: %s", err)
 	}
