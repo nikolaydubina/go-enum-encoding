@@ -18,6 +18,18 @@ func TestMain(t *testing.T) {
 			t.Fatal("must be error")
 		}
 	})
+
+	t.Run("when no undefined, then error", func(t *testing.T) {
+		if err := process("NoUndefined", "internal/testdata/no_undefined.go", "main"); err == nil {
+			t.Fatal("must be error")
+		}
+	})
+
+	t.Run("when undefined has wrong tag, then error", func(t *testing.T) {
+		if err := process("BadUndefined1", "internal/testdata/wrong_tag_undefined.go", "main"); err == nil {
+			t.Fatal("must be error")
+		}
+	})
 }
 
 func assertEqFile(t *testing.T, a, b string) {
