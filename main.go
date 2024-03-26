@@ -23,15 +23,15 @@ var templateCode []byte
 //go:embed enum_test.go.template
 var templateTest []byte
 
-var (
-	typeName    string
-	fileName    = os.Getenv("GOFILE")
-	packageName = os.Getenv("GOPACKAGE")
-)
-
 func main() {
+	var (
+		typeName    string
+		fileName    = os.Getenv("GOFILE")
+		packageName = os.Getenv("GOPACKAGE")
+	)
 	flag.StringVar(&typeName, "type", "", "type to be generated for")
 	flag.Parse()
+
 	if err := process(typeName, fileName, packageName); err != nil {
 		log.Fatalf("cannot process: %s", err)
 	}
