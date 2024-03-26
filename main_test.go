@@ -18,7 +18,7 @@ func TestMain(t *testing.T) {
 	assertEqFile(t, "internal/testdata/color_enum_encoding_test.go", "internal/testdata/exp/color_enum_encoding_test.go")
 
 	t.Run("when bad go file, then error", func(t *testing.T) {
-		cmd := exec.Command("./main.test")
+		cmd := exec.Command("./main.test", "--type", "Color")
 		cmd.Env = append(cmd.Environ(), "GOFILE=README.md", "GOPACKAGE=main", "GOCOVERDIR=.")
 
 		if _, err := cmd.Output(); err == nil {
