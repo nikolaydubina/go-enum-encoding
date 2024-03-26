@@ -27,7 +27,10 @@ jobs:
           go mod download
 
       - name: Test
-        run: go test -coverprofile=coverage.out -cover ./...
+        run: |
+          go build -cover -o main.test main.go
+          go test -cover ./...
+          go tool covdata textfmt -i=. -o coverage.out
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
