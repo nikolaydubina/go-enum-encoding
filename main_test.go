@@ -30,7 +30,7 @@ func TestMain(t *testing.T) {
 
 	t.Run("when invalid package name, then error", func(t *testing.T) {
 		cmd := exec.Command(testbin, "--type", "Color")
-		cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/color.go", "GOPACKAGE=m_aIn", "GOCOVERDIR="+coverdir)
+		cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/color.go", "GOPACKAGE=\"", "GOCOVERDIR="+coverdir)
 		if err := cmd.Run(); err == nil {
 			t.Fatal("must be error")
 		}
