@@ -2,12 +2,16 @@ package main
 
 import (
 	"os"
+	"os/exec"
 	"testing"
 )
 
 func TestMain(t *testing.T) {
-	if err := process("Color", "internal/testdata/color.go", "main"); err != nil {
-		t.Fatal(err)
+	cmd := exec.Command("./main.test", "--type", "Color")
+	cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/color.go", "GOPACKAGE=main", "GOCOVERDIR=.")
+
+	if _, err := cmd.Output(); err != nil {
+		t.Fatalf("cannot run main: %s", err)
 	}
 
 	assertEqFile(t, "internal/testdata/color_enum_encoding.go", "internal/testdata/exp/color_enum_encoding.go")
