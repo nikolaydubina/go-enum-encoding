@@ -142,19 +142,5 @@ func writeCode(code []byte, outFilePath string) error {
 	if err != nil {
 		return fmt.Errorf("cannot format code: %s", err)
 	}
-
-	if err := os.MkdirAll(filepath.Dir(outFilePath), 0700); err != nil {
-		return fmt.Errorf("cannot create directory(%s): %s", filepath.Dir(outFilePath), err)
-	}
-
-	file, err := os.Create(outFilePath)
-	if err != nil {
-		return fmt.Errorf("cannot create file(%s): %s", outFilePath, err)
-	}
-	defer func() { file.Close() }()
-
-	if _, err := file.Write(formattedCode); err != nil {
-		return fmt.Errorf("cannot write to file(%s): %s", outFilePath, err)
-	}
-	return nil
+	return os.WriteFile(outFilePath, formattedCode, 0644)
 }
