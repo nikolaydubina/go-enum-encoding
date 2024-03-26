@@ -1,4 +1,4 @@
-package main
+package main_test
 
 import (
 	"os"
@@ -18,19 +18,28 @@ func TestMain(t *testing.T) {
 	assertEqFile(t, "internal/testdata/color_enum_encoding_test.go", "internal/testdata/exp/color_enum_encoding_test.go")
 
 	t.Run("when wrong params, then error", func(t *testing.T) {
-		if err := process("", "internal/testdata/color.go", "main"); err == nil {
+		cmd := exec.Command("./main.test")
+		cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/color.go", "GOPACKAGE=main", "GOCOVERDIR=.")
+
+		if _, err := cmd.Output(); err == nil {
 			t.Fatal("must be error")
 		}
 	})
 
 	t.Run("when no undefined, then error", func(t *testing.T) {
-		if err := process("NoUndefined", "internal/testdata/no_undefined.go", "main"); err == nil {
+		cmd := exec.Command("./main.test", "--type", "NoUndefined")
+		cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/no_undefined.go", "GOPACKAGE=main", "GOCOVERDIR=.")
+
+		if _, err := cmd.Output(); err == nil {
 			t.Fatal("must be error")
 		}
 	})
 
 	t.Run("when undefined has wrong tag, then error", func(t *testing.T) {
-		if err := process("BadUndefined1", "internal/testdata/wrong_tag_undefined.go", "main"); err == nil {
+		cmd := exec.Command("./main.test", "--type", "BadUndefined1")
+		cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/wrong_tag_undefined.go", "GOPACKAGE=main", "GOCOVERDIR=.")
+
+		if _, err := cmd.Output(); err == nil {
 			t.Fatal("must be error")
 		}
 	})
