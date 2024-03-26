@@ -11,9 +11,7 @@ go install github.com/nikolaydubina/go-enum-encoding@latest
 ```
 
 * 150 LOC
-* simple, fast[^1], and strict[^1]
-* no dependencies, no template
-* works with different enum implementations (`iota`, `struct`, `string`)
+* simple, fast[^1], strict[^1]
 * generates tests
 
 given
