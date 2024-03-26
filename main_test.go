@@ -13,12 +13,14 @@ func TestMain(t *testing.T) {
 	exec.Command("go", "build", "-cover", "-o", testbin, "main.go").Run()
 	defer exec.Command("go", "tool", "covdata", "textfmt", "-i="+coverdir, "-o", os.Getenv("GOCOVERPROFILE")).Run()
 
-	cmd := exec.Command(testbin, "--type", "Color")
-	cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/color.go", "GOPACKAGE=main", "GOCOVERDIR="+coverdir)
-	cmd.Run()
+	t.Run("when ok, then file matches expected", func(t *testing.T) {
+		cmd := exec.Command(testbin, "--type", "Color")
+		cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/color.go", "GOPACKAGE=main", "GOCOVERDIR="+coverdir)
+		cmd.Run()
 
-	assertEqFile(t, "internal/testdata/color_enum_encoding.go", "internal/testdata/exp/color_enum_encoding.go")
-	assertEqFile(t, "internal/testdata/color_enum_encoding_test.go", "internal/testdata/exp/color_enum_encoding_test.go")
+		assertEqFile(t, "internal/testdata/color_enum_encoding.go", "internal/testdata/exp/color_enum_encoding.go")
+		assertEqFile(t, "internal/testdata/color_enum_encoding_test.go", "internal/testdata/exp/color_enum_encoding_test.go")
+	})
 
 	t.Run("when bad go file, then error", func(t *testing.T) {
 		cmd := exec.Command(testbin, "--type", "Color")
