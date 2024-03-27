@@ -8,7 +8,6 @@ import (
 	"go/format"
 	"go/parser"
 	"go/token"
-	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -31,7 +30,8 @@ func main() {
 	flag.Parse()
 
 	if err := process(typeName, fileName, packageName); err != nil {
-		log.Fatalf("cannot process: %s", err)
+		os.Stderr.WriteString(err.Error())
+		os.Exit(1)
 	}
 }
 
