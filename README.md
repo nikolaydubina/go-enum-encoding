@@ -10,7 +10,7 @@
 go install github.com/nikolaydubina/go-enum-encoding@latest
 ```
 
-* 150 LOC
+* 100 LOC
 * simple, fast[^1], strict[^1]
 * generates tests
 
