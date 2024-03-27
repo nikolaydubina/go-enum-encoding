@@ -90,14 +90,14 @@ func process(typeName string, fileName string, packageName string) error {
 	code := templateCode
 	code = bytes.ReplaceAll(code, []byte("{{.Type}}"), []byte(typeName))
 	code = bytes.ReplaceAll(code, []byte("{{.Package}}"), []byte(packageName))
-	code = bytes.ReplaceAll(code, []byte("{{.val_to_json}}"), []byte(strings.Join(valToJson(specs), "\n")))
-	code = bytes.ReplaceAll(code, []byte("{{.json_to_value}}"), []byte(strings.Join(jsonToVal(specs), "\n")))
+	code = bytes.ReplaceAll(code, []byte("{{.val_to_json}}"), []byte(strings.Join(mp(specs, func(k, v string) string { return fmt.Sprintf("%s: \"%s\",", k, v) }), "\n")))
+	code = bytes.ReplaceAll(code, []byte("{{.json_to_value}}"), []byte(strings.Join(mp(specs, func(k, v string) string { return fmt.Sprintf("\"%s\": %s,", v, k) }), "\n")))
 
 	test := templateTest
 	test = bytes.ReplaceAll(test, []byte("{{.Type}}"), []byte(typeName))
 	test = bytes.ReplaceAll(test, []byte("{{.Package}}"), []byte(packageName))
-	test = bytes.ReplaceAll(test, []byte("{{.Values}}"), []byte(strings.Join(vals(specs), ", ")))
-	test = bytes.ReplaceAll(test, []byte("{{.Tags}}"), []byte(strings.Join(tags(specs), ",")))
+	test = bytes.ReplaceAll(test, []byte("{{.Values}}"), []byte(strings.Join(mp(specs, func(k, _ string) string { return k }), ", ")))
+	test = bytes.ReplaceAll(test, []byte("{{.Tags}}"), []byte(strings.Join(mp(specs, func(_, v string) string { return `"` + v + `"` }), ",")))
 
 	return errors.Join(
 		writeCode(code, filepath.Join(filepath.Dir(fileName), strings.ToLower(typeName)+"_enum_encoding.go")),
@@ -105,33 +105,9 @@ func process(typeName string, fileName string, packageName string) error {
 	)
 }
 
-func valToJson(specs map[string]string) (res []string) {
-	for val, jsonTag := range specs {
-		res = append(res, fmt.Sprintf("%s: \"%s\",", val, jsonTag))
-	}
-	sort.StringSlice(res).Sort()
-	return res
-}
-
-func jsonToVal(specs map[string]string) (res []string) {
-	for val, jsonTag := range specs {
-		res = append(res, fmt.Sprintf("\"%s\": %s,", jsonTag, val))
-	}
-	sort.StringSlice(res).Sort()
-	return res
-}
-
-func vals(specs map[string]string) (res []string) {
-	for val := range specs {
-		res = append(res, val)
-	}
-	sort.StringSlice(res).Sort()
-	return res
-}
-
-func tags(specs map[string]string) (res []string) {
-	for _, tag := range specs {
-		res = append(res, `"`+tag+`"`)
+func mp(m map[string]string, f func(k, v string) string) (res []string) {
+	for k, v := range m {
+		res = append(res, f(k, v))
 	}
 	sort.StringSlice(res).Sort()
 	return res
