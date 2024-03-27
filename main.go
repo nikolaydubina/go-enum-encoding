@@ -1,11 +1,9 @@
 package main
 
 import (
-	"bytes"
 	_ "embed"
 	"errors"
 	"flag"
-	"fmt"
 	"go/ast"
 	"go/format"
 	"go/parser"
@@ -18,10 +16,10 @@ import (
 )
 
 //go:embed enum.go.template
-var templateCode []byte
+var templateCode string
 
 //go:embed enum_test.go.template
-var templateTest []byte
+var templateTest string
 
 func main() {
 	var (
@@ -39,17 +37,17 @@ func main() {
 
 func process(typeName string, fileName string, packageName string) error {
 	if typeName == "" || fileName == "" || packageName == "" {
-		return fmt.Errorf("type, file and package name must be provided")
+		return errors.New("type, file and package name must be provided")
 	}
 
 	inputCode, err := os.ReadFile(fileName)
 	if err != nil {
-		return fmt.Errorf("cannot read file(%s): %s", fileName, err)
+		return err
 	}
 
 	f, err := parser.ParseFile(token.NewFileSet(), fileName, inputCode, parser.ParseComments)
 	if err != nil {
-		return fmt.Errorf("cannot parse file(%s): %s", fileName, err)
+		return err
 	}
 
 	specs := make(map[string]string)
@@ -81,27 +79,27 @@ func process(typeName string, fileName string, packageName string) error {
 	})
 
 	if tag, ok := specs["Undefined"+typeName]; !ok {
-		return fmt.Errorf(`missing enum symbol("%s") for type(%s)`, "Undefined"+typeName, typeName)
+		return errors.New(`missing enum symbol("Undefined` + typeName + `") for type(` + typeName + `)`)
 	} else if tag != "-" {
-		return fmt.Errorf(`json tag for Undefined value must be "-" but got "%s"`, tag)
+		return errors.New(`json tag for Undefined value must be "-" but got "` + tag + `"`)
 	}
 	delete(specs, "Undefined"+typeName)
 
 	code := templateCode
-	code = bytes.ReplaceAll(code, []byte("{{.Type}}"), []byte(typeName))
-	code = bytes.ReplaceAll(code, []byte("{{.Package}}"), []byte(packageName))
-	code = bytes.ReplaceAll(code, []byte("{{.val_to_json}}"), []byte(strings.Join(mp(specs, func(k, v string) string { return fmt.Sprintf("%s: \"%s\",", k, v) }), "\n")))
-	code = bytes.ReplaceAll(code, []byte("{{.json_to_value}}"), []byte(strings.Join(mp(specs, func(k, v string) string { return fmt.Sprintf("\"%s\": %s,", v, k) }), "\n")))
+	code = strings.ReplaceAll(code, "{{.Type}}", typeName)
+	code = strings.ReplaceAll(code, "{{.Package}}", packageName)
+	code = strings.ReplaceAll(code, "{{.val_to_json}}", strings.Join(mp(specs, func(k, v string) string { return k + `: "` + v + `",` }), "\n"))
+	code = strings.ReplaceAll(code, "{{.json_to_value}}", strings.Join(mp(specs, func(k, v string) string { return `"` + v + `": ` + k + `,` }), "\n"))
 
 	test := templateTest
-	test = bytes.ReplaceAll(test, []byte("{{.Type}}"), []byte(typeName))
-	test = bytes.ReplaceAll(test, []byte("{{.Package}}"), []byte(packageName))
-	test = bytes.ReplaceAll(test, []byte("{{.Values}}"), []byte(strings.Join(mp(specs, func(k, _ string) string { return k }), ", ")))
-	test = bytes.ReplaceAll(test, []byte("{{.Tags}}"), []byte(strings.Join(mp(specs, func(_, v string) string { return `"` + v + `"` }), ",")))
+	test = strings.ReplaceAll(test, "{{.Type}}", typeName)
+	test = strings.ReplaceAll(test, "{{.Package}}", packageName)
+	test = strings.ReplaceAll(test, "{{.Values}}", strings.Join(mp(specs, func(k, _ string) string { return k }), ", "))
+	test = strings.ReplaceAll(test, "{{.Tags}}", strings.Join(mp(specs, func(_, v string) string { return `"` + v + `"` }), ","))
 
 	return errors.Join(
-		writeCode(code, filepath.Join(filepath.Dir(fileName), strings.ToLower(typeName)+"_enum_encoding.go")),
-		writeCode(test, filepath.Join(filepath.Dir(fileName), strings.ToLower(typeName)+"_enum_encoding_test.go")),
+		writeCode([]byte(code), filepath.Join(filepath.Dir(fileName), strings.ToLower(typeName)+"_enum_encoding.go")),
+		writeCode([]byte(test), filepath.Join(filepath.Dir(fileName), strings.ToLower(typeName)+"_enum_encoding_test.go")),
 	)
 }
 
@@ -116,7 +114,7 @@ func mp(m map[string]string, f func(k, v string) string) (res []string) {
 func writeCode(code []byte, outFilePath string) error {
 	formattedCode, err := format.Source(code)
 	if err != nil {
-		return fmt.Errorf("cannot format code: %s", err)
+		return err
 	}
 	return os.WriteFile(outFilePath, formattedCode, 0644)
 }
