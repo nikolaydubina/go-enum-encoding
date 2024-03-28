@@ -70,11 +70,9 @@ func process(typeName string, fileName string, packageName string) error {
 				break
 			}
 		}
-		if !ok {
-			return false
+		if ok {
+			specs[spec.Names[0].Name] = tag
 		}
-
-		specs[spec.Names[0].Name] = tag
 		return false
 	})
 
