@@ -63,10 +63,10 @@ func process(typeName string, fileName string, packageName string) error {
 		}
 		// TODO: check that type matches
 
-		jsonTag, ok := "", false
+		tag, ok := "", false
 		for _, field := range strings.Fields(spec.Comment.Text()) {
 			if strings.HasPrefix(field, "json:") {
-				jsonTag, ok = field[len("json:\""):len(field)-1], true
+				tag, ok = field[len("json:\""):len(field)-1], true
 				break
 			}
 		}
@@ -74,7 +74,7 @@ func process(typeName string, fileName string, packageName string) error {
 			return false
 		}
 
-		specs[spec.Names[0].Name] = jsonTag
+		specs[spec.Names[0].Name] = tag
 		return false
 	})
 
