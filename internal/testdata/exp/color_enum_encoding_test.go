@@ -13,10 +13,10 @@ func TestJSON_Color(t *testing.T) {
 		Values []Color `json:"values"`
 	}
 
-	values := []Color{Blue, Green, Red}
+	values := []Color{Blue, Green, Red, UndefinedColor}
 
 	var v V
-	s := `{"values":["blue","green","red"]}`
+	s := `{"values":["blue","green","red",""]}`
 	json.Unmarshal([]byte(s), &v)
 
 	if len(v.Values) != len(values) {
@@ -36,18 +36,6 @@ func TestJSON_Color(t *testing.T) {
 
 	t.Run("when unknown value, then error", func(t *testing.T) {
 		s := `{"values":["something"]}`
-		var v V
-		err := json.Unmarshal([]byte(s), &v)
-		if err == nil {
-			t.Errorf("must be error")
-		}
-		if !errors.Is(err, ErrUnknownColor) {
-			t.Errorf("wrong error: %s", err)
-		}
-	})
-
-	t.Run("when empty value, then error", func(t *testing.T) {
-		s := `{"values":[""]}`
 		var v V
 		err := json.Unmarshal([]byte(s), &v)
 		if err == nil {

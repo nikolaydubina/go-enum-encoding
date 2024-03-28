@@ -73,29 +73,27 @@ func process(typeName string, fileName string, packageName string) error {
 		if jsonTag == "" {
 			return false
 		}
+		if jsonTag == "-" {
+			jsonTag = ""
+		}
 
 		specs[spec.Names[0].Name] = jsonTag
 		return false
 	})
 
-	if tag, ok := specs["Undefined"+typeName]; !ok {
-		return errors.New(`missing enum symbol("Undefined` + typeName + `") for type(` + typeName + `)`)
-	} else if tag != "-" {
-		return errors.New(`json tag for Undefined value must be "-" but got "` + tag + `"`)
-	}
-	delete(specs, "Undefined"+typeName)
+	l := items(specs)
 
 	code := templateCode
 	code = strings.ReplaceAll(code, "{{.Type}}", typeName)
 	code = strings.ReplaceAll(code, "{{.Package}}", packageName)
-	code = strings.ReplaceAll(code, "{{.val_to_json}}", strings.Join(mp(specs, func(k, v string) string { return k + `: "` + v + `",` }), "\n"))
-	code = strings.ReplaceAll(code, "{{.json_to_value}}", strings.Join(mp(specs, func(k, v string) string { return `"` + v + `": ` + k + `,` }), "\n"))
+	code = strings.ReplaceAll(code, "{{.val_to_json}}", strings.Join(mp(l, func(v [2]string) string { return v[0] + `: "` + v[1] + `",` }), "\n"))
+	code = strings.ReplaceAll(code, "{{.json_to_value}}", strings.Join(mp(l, func(v [2]string) string { return `"` + v[1] + `": ` + v[0] + `,` }), "\n"))
 
 	test := templateTest
 	test = strings.ReplaceAll(test, "{{.Type}}", typeName)
 	test = strings.ReplaceAll(test, "{{.Package}}", packageName)
-	test = strings.ReplaceAll(test, "{{.Values}}", strings.Join(mp(specs, func(k, _ string) string { return k }), ", "))
-	test = strings.ReplaceAll(test, "{{.Tags}}", strings.Join(mp(specs, func(_, v string) string { return `"` + v + `"` }), ","))
+	test = strings.ReplaceAll(test, "{{.Values}}", strings.Join(mp(l, func(v [2]string) string { return v[0] }), ", "))
+	test = strings.ReplaceAll(test, "{{.Tags}}", strings.Join(mp(l, func(v [2]string) string { return `"` + v[1] + `"` }), ","))
 
 	return errors.Join(
 		writeCode([]byte(code), filepath.Join(filepath.Dir(fileName), strings.ToLower(typeName)+"_enum_encoding.go")),
@@ -103,12 +101,20 @@ func process(typeName string, fileName string, packageName string) error {
 	)
 }
 
-func mp(m map[string]string, f func(k, v string) string) (res []string) {
+func items(m map[string]string) (l [][2]string) {
 	for k, v := range m {
-		res = append(res, f(k, v))
+		l = append(l, [2]string{k, v})
 	}
-	sort.StringSlice(res).Sort()
-	return res
+	sort.Slice(l, func(i, j int) bool { return l[i][0] < l[j][0] })
+	return l
+
+}
+
+func mp[T any, M any](a []T, f func(T) M) (l []M) {
+	for _, e := range a {
+		l = append(l, f(e))
+	}
+	return l
 }
 
 func writeCode(code []byte, outFilePath string) error {

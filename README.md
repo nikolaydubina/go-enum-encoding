@@ -39,20 +39,22 @@ import "errors"
 var ErrUnknownColor = errors.New("unknown Color")
 
 var vals_Color = map[Color]string{
-	Blue:  "blue",
-	Green: "green",
-	Red:   "red",
+	Blue:           "blue",
+	Green:          "green",
+	Red:            "red",
+	UndefinedColor: "",
 }
 
 var vals_inv_Color = map[string]Color{
 	"blue":  Blue,
 	"green": Green,
 	"red":   Red,
+	"":      UndefinedColor,
 }
 
 func (s *Color) UnmarshalText(text []byte) error {
-	*s = vals_inv_Color[string(text)]
-	if *s == UndefinedColor {
+	var ok bool
+	if *s, ok = vals_inv_Color[string(text)]; !ok {
 		return ErrUnknownColor
 	}
 	return nil
@@ -61,7 +63,6 @@ func (s *Color) UnmarshalText(text []byte) error {
 func (s Color) MarshalText() ([]byte, error) { return []byte(s.String()), nil }
 
 func (s Color) String() string { return vals_Color[s] }
-
 ```
 
 </details>
@@ -84,10 +85,10 @@ func TestJSON_Color(t *testing.T) {
 		Values []Color `json:"values"`
 	}
 
-	values := []Color{Blue, Green, Red}
+	values := []Color{Blue, Green, Red, UndefinedColor}
 
 	var v V
-	s := `{"values":["blue","green","red"]}`
+	s := `{"values":["blue","green","red",""]}`
 	json.Unmarshal([]byte(s), &v)
 
 	if len(v.Values) != len(values) {
@@ -116,20 +117,7 @@ func TestJSON_Color(t *testing.T) {
 			t.Errorf("wrong error: %s", err)
 		}
 	})
-
-	t.Run("when empty value, then error", func(t *testing.T) {
-		s := `{"values":[""]}`
-		var v V
-		err := json.Unmarshal([]byte(s), &v)
-		if err == nil {
-			t.Errorf("must be error")
-		}
-		if !errors.Is(err, ErrUnknownColor) {
-			t.Errorf("wrong error: %s", err)
-		}
-	})
 }
-
 ```
 
 </details>

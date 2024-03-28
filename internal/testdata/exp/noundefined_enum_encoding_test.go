@@ -8,15 +8,15 @@ import (
 	"testing"
 )
 
-func TestJSON_Color(t *testing.T) {
+func TestJSON_NoUndefined(t *testing.T) {
 	type V struct {
-		Values []Color `json:"values"`
+		Values []NoUndefined `json:"values"`
 	}
 
-	values := []Color{Blue, Green, Red, UndefinedColor}
+	values := []NoUndefined{BlueNoUndefined, RedNoUndefined}
 
 	var v V
-	s := `{"values":["blue","green","red",""]}`
+	s := `{"values":["blue","red"]}`
 	json.Unmarshal([]byte(s), &v)
 
 	if len(v.Values) != len(values) {
@@ -41,7 +41,7 @@ func TestJSON_Color(t *testing.T) {
 		if err == nil {
 			t.Errorf("must be error")
 		}
-		if !errors.Is(err, ErrUnknownColor) {
+		if !errors.Is(err, ErrUnknownNoUndefined) {
 			t.Errorf("wrong error: %s", err)
 		}
 	})
