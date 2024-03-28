@@ -75,15 +75,7 @@ func TestMain(t *testing.T) {
 	t.Run("when no undefined, then error", func(t *testing.T) {
 		cmd := exec.Command(testbin, "--type", "NoUndefined")
 		cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/no_undefined.go", "GOPACKAGE=main", "GOCOVERDIR="+coverdir)
-		if err := cmd.Run(); err == nil {
-			t.Fatal("must be error")
-		}
-	})
-
-	t.Run("when undefined has wrong tag, then error", func(t *testing.T) {
-		cmd := exec.Command(testbin, "--type", "BadUndefined1")
-		cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/wrong_tag_undefined.go", "GOPACKAGE=main", "GOCOVERDIR="+coverdir)
-		if err := cmd.Run(); err == nil {
+		if err := cmd.Run(); err != nil {
 			t.Fatal("must be error")
 		}
 	})

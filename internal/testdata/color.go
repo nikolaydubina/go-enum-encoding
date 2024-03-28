@@ -1,10 +1,5 @@
 package main
 
-import (
-	"encoding/json"
-	"fmt"
-)
-
 type Color struct{ c uint }
 
 //go:generate go-enum-encoding -type=Color
@@ -18,11 +13,4 @@ var (
 
 type V struct {
 	Color Color `json:"color"`
-}
-
-func main() {
-	var v V
-	s := `{"color": "red"}`
-	json.Unmarshal([]byte(s), &v)
-	fmt.Println(v)
 }

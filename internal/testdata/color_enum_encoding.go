@@ -6,20 +6,22 @@ import "errors"
 var ErrUnknownColor = errors.New("unknown Color")
 
 var vals_Color = map[Color]string{
-	Blue:  "blue",
-	Green: "green",
-	Red:   "red",
+	Blue:           "blue",
+	Green:          "green",
+	Red:            "red",
+	UndefinedColor: "",
 }
 
 var vals_inv_Color = map[string]Color{
 	"blue":  Blue,
 	"green": Green,
 	"red":   Red,
+	"":      UndefinedColor,
 }
 
 func (s *Color) UnmarshalText(text []byte) error {
-	*s = vals_inv_Color[string(text)]
-	if *s == UndefinedColor {
+	var ok bool
+	if *s, ok = vals_inv_Color[string(text)]; !ok {
 		return ErrUnknownColor
 	}
 	return nil

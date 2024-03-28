@@ -14,9 +14,9 @@ var vals_inv_{{.Type}} = map[string]{{.Type}}{
 }
 
 func (s *{{.Type}}) UnmarshalText(text []byte) error {
-	*s = vals_inv_{{.Type}}[string(text)]
-	if *s == Undefined{{.Type}} {
-		return  ErrUnknown{{.Type}}
+	var ok bool
+	if *s, ok = vals_inv_{{.Type}}[string(text)]; !ok {
+		return ErrUnknown{{.Type}}
 	}
 	return nil
 }

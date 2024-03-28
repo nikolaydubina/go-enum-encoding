@@ -45,16 +45,4 @@ func TestJSON_{{.Type}}(t *testing.T) {
 			t.Errorf("wrong error: %s", err)
 		}
 	})
-
-	t.Run("when empty value, then error", func(t *testing.T) {
-		s := `{"values":[""]}`
-		var v V
-		err := json.Unmarshal([]byte(s), &v)
-		if err == nil {
-			t.Errorf("must be error")
-		}
-		if !errors.Is(err, ErrUnknown{{.Type}}) {
-			t.Errorf("wrong error: %s", err)
-		}
-	})
 }
