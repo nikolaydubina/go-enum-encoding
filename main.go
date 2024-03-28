@@ -50,7 +50,7 @@ func process(typeName string, fileName string, packageName string) error {
 		return err
 	}
 
-	specs := make(map[string]string)
+	var specs [][2]string
 
 	ast.Inspect(f, func(node ast.Node) bool {
 		spec, ok := node.(*ast.ValueSpec)
@@ -71,38 +71,29 @@ func process(typeName string, fileName string, packageName string) error {
 			}
 		}
 		if ok {
-			specs[spec.Names[0].Name] = tag
+			specs = append(specs, [2]string{spec.Names[0].Name, tag})
 		}
 		return false
 	})
 
-	l := items(specs)
+	sort.Slice(specs, func(i, j int) bool { return specs[i][0] < specs[j][0] })
 
 	code := templateCode
 	code = strings.ReplaceAll(code, "{{.Type}}", typeName)
 	code = strings.ReplaceAll(code, "{{.Package}}", packageName)
-	code = strings.ReplaceAll(code, "{{.val_to_json}}", strings.Join(mp(l, func(v [2]string) string { return v[0] + `: "` + v[1] + `",` }), "\n"))
-	code = strings.ReplaceAll(code, "{{.json_to_value}}", strings.Join(mp(l, func(v [2]string) string { return `"` + v[1] + `": ` + v[0] + `,` }), "\n"))
+	code = strings.ReplaceAll(code, "{{.val_to_json}}", strings.Join(mp(specs, func(v [2]string) string { return v[0] + `: "` + v[1] + `",` }), "\n"))
+	code = strings.ReplaceAll(code, "{{.json_to_value}}", strings.Join(mp(specs, func(v [2]string) string { return `"` + v[1] + `": ` + v[0] + `,` }), "\n"))
 
 	test := templateTest
 	test = strings.ReplaceAll(test, "{{.Type}}", typeName)
 	test = strings.ReplaceAll(test, "{{.Package}}", packageName)
-	test = strings.ReplaceAll(test, "{{.Values}}", strings.Join(mp(l, func(v [2]string) string { return v[0] }), ", "))
-	test = strings.ReplaceAll(test, "{{.Tags}}", strings.Join(mp(l, func(v [2]string) string { return `"` + v[1] + `"` }), ","))
+	test = strings.ReplaceAll(test, "{{.Values}}", strings.Join(mp(specs, func(v [2]string) string { return v[0] }), ", "))
+	test = strings.ReplaceAll(test, "{{.Tags}}", strings.Join(mp(specs, func(v [2]string) string { return `"` + v[1] + `"` }), ","))
 
 	return errors.Join(
 		writeCode([]byte(code), filepath.Join(filepath.Dir(fileName), strings.ToLower(typeName)+"_enum_encoding.go")),
 		writeCode([]byte(test), filepath.Join(filepath.Dir(fileName), strings.ToLower(typeName)+"_enum_encoding_test.go")),
 	)
-}
-
-func items(m map[string]string) (l [][2]string) {
-	for k, v := range m {
-		l = append(l, [2]string{k, v})
-	}
-	sort.Slice(l, func(i, j int) bool { return l[i][0] < l[j][0] })
-	return l
-
 }
 
 func mp[T any, M any](a []T, f func(T) M) (l []M) {
