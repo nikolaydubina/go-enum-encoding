@@ -17,7 +17,7 @@ func FuzzBadFile(f *testing.F) {
 			os.WriteFile(fname, []byte(orig), 0644)
 
 			cmd := exec.Command(testbin, "--type", "Color")
-			cmd.Env = append(cmd.Environ(), "GOFILE="+fname, "GOPACKAGE=main")
+			cmd.Env = append(cmd.Environ(), "GOFILE="+fname, "GOPACKAGE=color")
 			if err := cmd.Run(); err == nil {
 				t.Fatal("must be error")
 			}
@@ -33,7 +33,7 @@ func TestMain(t *testing.T) {
 
 	t.Run("when ok, then file matches expected", func(t *testing.T) {
 		cmd := exec.Command(testbin, "--type", "Color")
-		cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/color.go", "GOPACKAGE=main", "GOCOVERDIR="+coverdir)
+		cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/color.go", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
 		cmd.Run()
 
 		assertEqFile(t, "internal/testdata/color_enum_encoding.go", "internal/testdata/exp/color_enum_encoding.go")
@@ -42,9 +42,9 @@ func TestMain(t *testing.T) {
 
 	t.Run("when no undefined, then ok", func(t *testing.T) {
 		cmd := exec.Command(testbin, "--type", "NoUndefined")
-		cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/no_undefined.go", "GOPACKAGE=main", "GOCOVERDIR="+coverdir)
-		if err := cmd.Run(); err != nil {
-			t.Fatal("must be error")
+		cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/no_undefined.go", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("got error: %s, out: %s", err, string(out))
 		}
 
 		assertEqFile(t, "internal/testdata/noundefined_enum_encoding.go", "internal/testdata/exp/noundefined_enum_encoding.go")
@@ -53,7 +53,7 @@ func TestMain(t *testing.T) {
 
 	t.Run("when bad go file, then error", func(t *testing.T) {
 		cmd := exec.Command(testbin, "--type", "Color")
-		cmd.Env = append(cmd.Environ(), "GOFILE=README.md", "GOPACKAGE=main", "GOCOVERDIR="+coverdir)
+		cmd.Env = append(cmd.Environ(), "GOFILE=README.md", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
 		if err := cmd.Run(); err == nil {
 			t.Fatal("must be error")
 		}
@@ -69,7 +69,7 @@ func TestMain(t *testing.T) {
 
 	t.Run("when not found file, then error", func(t *testing.T) {
 		cmd := exec.Command(testbin, "--type", "Color")
-		cmd.Env = append(cmd.Environ(), "GOFILE=asdf.asdf", "GOPACKAGE=main", "GOCOVERDIR="+coverdir)
+		cmd.Env = append(cmd.Environ(), "GOFILE=asdf.asdf", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
 		if err := cmd.Run(); err == nil {
 			t.Fatal("must be error")
 		}
@@ -77,7 +77,7 @@ func TestMain(t *testing.T) {
 
 	t.Run("when wrong params, then error", func(t *testing.T) {
 		cmd := exec.Command(testbin)
-		cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/color.go", "GOPACKAGE=main", "GOCOVERDIR="+coverdir)
+		cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/color.go", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
 		if err := cmd.Run(); err == nil {
 			t.Fatal("must be error")
 		}

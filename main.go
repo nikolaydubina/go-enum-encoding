@@ -10,7 +10,6 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 )
 
@@ -75,8 +74,6 @@ func process(typeName string, fileName string, packageName string) error {
 		}
 		return false
 	})
-
-	sort.Slice(specs, func(i, j int) bool { return specs[i][0] < specs[j][0] })
 
 	code := templateCode
 	code = strings.ReplaceAll(code, "{{.Type}}", typeName)

@@ -1,0 +1,7 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/nikolaydubina/go-enum-encoding/internal/research/array-unmarshal-index
+BenchmarkMarshalText_Color-16      	491515972	         2.168 ns/op	       0 B/op	       0 allocs/op
+BenchmarkUnmarshalText_Color-16    	100000000	        12.02 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/nikolaydubina/go-enum-encoding/internal/research/array-unmarshal-index	2.957s

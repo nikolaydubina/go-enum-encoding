@@ -126,3 +126,27 @@ func TestJSON_Color(t *testing.T) {
 - http://github.com/zarldev/goenums - does much more advanced struct generation, generates all enum utilities besides encoding, does not generate tests, uses similar notation to trigger go:generate but with different comment directivs (non-json field tags)
 
 [^1]: Comparison to other enums methods: http://github.com/nikolaydubina/go-enum-example
+
+## Appendix: Decoding from Array
+
+@mishak87 [proposed](https://github.com/nikolaydubina/go-enum-encoding/issues/19) to use array instead of map for during decoding phase to improve performance.
+However, using arrays will require user enums to be contigious, low-number, starting from zero values.
+This will also require to read numeric value from enum var/const definition in AST, that increases code complexity.
+
+```bash
+$ go test -bench=Benchmark -benchmem ./internal/research/array-unmarshal-index > array-unmarshal-index.bench 
+$ go test -bench=Benchmark -benchmem ./internal/research/array-unmarshal-index-string > array-unmarshal-index-string.bench 
+$ go test -bench=Benchmark -benchmem ./internal/research/map-unmarshal >  map-unmarshal.bench
+$ benchstat -split="XYZ" map-unmarshal.bench array-unmarshal-index.bench  array-unmarshal-index-string.bench
+name \ time/op          map-unmarshal.bench  array-unmarshal-index.bench  array-unmarshal-index-string.bench
+MarshalText_Color-16            11.0ns ± 0%                   2.2ns ± 0%                          2.3ns ± 0%
+UnmarshalText_Color-16          12.0ns ± 0%                  12.0ns ± 0%                         11.9ns ± 0%
+
+name \ alloc/op         map-unmarshal.bench  array-unmarshal-index.bench  array-unmarshal-index-string.bench
+MarshalText_Color-16             0.00B                        0.00B                               0.00B     
+UnmarshalText_Color-16           0.00B                        0.00B                               0.00B     
+
+name \ allocs/op        map-unmarshal.bench  array-unmarshal-index.bench  array-unmarshal-index-string.bench
+MarshalText_Color-16              0.00                         0.00                                0.00     
+UnmarshalText_Color-16            0.00                         0.00                                0.00   
+```
