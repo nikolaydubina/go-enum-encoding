@@ -123,12 +123,12 @@ func TestJSON_Color(t *testing.T) {
 
 ## Related Work and References
 
-- http://github.com/zarldev/goenums - does much more advanced struct generation, generates all enum utilities besides encoding, does not generate tests, uses similar notation to trigger go:generate but with different comment directivs (non-json field tags)
+- http://github.com/zarldev/goenums - does much more advanced struct generation, generates all enum utilities besides encoding, does not generate tests, uses similar notation to trigger go:generate but with different comment directives (non-json field tags)
 
 ## Appendix: Decoding from Array
 
 @mishak87 [proposed](https://github.com/nikolaydubina/go-enum-encoding/issues/19) to use array instead of map for performance.
-Array indexes perform much faster for encoding would require user enums to be contigious, low-number, starting from zero values and require reading numeric value from enum var/const declaration in AST, that increases code complexity.
+Array indexes perform much faster for encoding would require user enums to be contiguous, low-number, starting from zero values and require reading numeric value from enum var/const declaration in AST, that increases code complexity.
 Array loop imposes lower implementation cost, however it does not lead to significant benefits in performance.
 Similarly, @nikolaydubina faced degradation in performance for loop based array enums while working on fpmoney[^2] and iso4217[^3].
 
