@@ -1,6 +1,6 @@
 package color
 
-type Color struct{ c uint }
+type Color struct{ c uint8 }
 
 //go:generate go-enum-encoding -type=Color
 var (

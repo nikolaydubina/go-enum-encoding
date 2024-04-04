@@ -71,7 +71,4 @@ func BenchmarkUnmarshalText_Color(b *testing.B) {
 			}
 		}
 	}
-	if len(x.String()) > 1000 {
-		b.Fatal("noop")
-	}
 }

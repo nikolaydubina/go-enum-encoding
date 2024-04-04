@@ -4,7 +4,7 @@ import "errors"
 
 var ErrUnknownColor = errors.New("unknown Color")
 
-var vals_Color = []string{"", "red", "green", "blue"}
+var vals_Color = [...]string{"", "red", "green", "blue"}
 
 var vals_inv_Color = map[string]Color{
 	"blue":  Blue,

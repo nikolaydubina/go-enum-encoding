@@ -5,28 +5,35 @@ import "errors"
 
 var ErrUnknownColor = errors.New("unknown Color")
 
-var vals_Color = map[Color]string{
-	UndefinedColor: "",
-	Red:            "red",
-	Green:          "green",
-	Blue:           "blue",
-}
-
-var vals_inv_Color = map[string]Color{
-	"":      UndefinedColor,
-	"red":   Red,
-	"green": Green,
-	"blue":  Blue,
-}
-
 func (s *Color) UnmarshalText(text []byte) error {
-	var ok bool
-	if *s, ok = vals_inv_Color[string(text)]; !ok {
+	switch string(text) {
+	case "":
+		*s = UndefinedColor
+	case "red":
+		*s = Red
+	case "green":
+		*s = Green
+	case "blue":
+		*s = Blue
+	default:
 		return ErrUnknownColor
 	}
 	return nil
 }
 
-func (s Color) MarshalText() ([]byte, error) { return []byte(s.String()), nil }
+var json_bytes_Color = [...][]byte{[]byte(""), []byte("red"), []byte("green"), []byte("blue")}
 
-func (s Color) String() string { return vals_Color[s] }
+func (s Color) MarshalText() ([]byte, error) {
+	switch s {
+	case UndefinedColor:
+		return json_bytes_Color[0], nil
+	case Red:
+		return json_bytes_Color[1], nil
+	case Green:
+		return json_bytes_Color[2], nil
+	case Blue:
+		return json_bytes_Color[3], nil
+	default:
+		return nil, ErrUnknownColor
+	}
+}

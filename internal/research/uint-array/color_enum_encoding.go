@@ -21,11 +21,4 @@ func (s *Color) UnmarshalText(text []byte) error {
 
 func (s Color) MarshalText() ([]byte, error) { return []byte(s.String()), nil }
 
-func (s Color) String() string {
-	for i := range vals_Color {
-		if vals_Color[i] == s {
-			return json_Color[i]
-		}
-	}
-	return ""
-}
+func (s Color) String() string { return json_Color[s] }
