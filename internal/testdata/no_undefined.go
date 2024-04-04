@@ -1,4 +1,4 @@
-package main
+package color
 
 type NoUndefined struct{ c uint }
 

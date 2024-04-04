@@ -12,7 +12,7 @@ go install github.com/nikolaydubina/go-enum-encoding@latest
 
 * 100 LOC
 * simple, fast[^1], strict[^1]
-* generates tests
+* generates tests and benchmarks
 
 given
 ```go
@@ -123,6 +123,34 @@ func TestJSON_Color(t *testing.T) {
 
 ## Related Work and References
 
-- http://github.com/zarldev/goenums - does much more advanced struct generation, generates all enum utilities besides encoding, does not generate tests, uses similar notation to trigger go:generate but with different comment directivs (non-json field tags)
+- http://github.com/zarldev/goenums - does much more advanced struct generation, generates all enum utilities besides encoding, does not generate tests, uses similar notation to trigger go:generate but with different comment directives (non-json field tags)
+
+## Appendix: Decoding from Array
+
+@mishak87 [proposed](https://github.com/nikolaydubina/go-enum-encoding/issues/19) to use array instead of map for performance.
+Array indexes perform much faster for encoding would require user enums to be contiguous, low-number, starting from zero values and require reading numeric value from enum var/const declaration in AST, that increases code complexity.
+Array loop imposes lower implementation cost, however it does not lead to significant benefits in performance.
+Similarly, @nikolaydubina faced degradation in performance for loop based array enums while working on fpmoney[^2] and iso4217[^3].
+
+```bash
+$ go test -bench=Benchmark -benchmem ./internal/research/map >  map.bench
+$ go test -bench=Benchmark -benchmem ./internal/research/array-loop > array-loop.bench 
+$ go test -bench=Benchmark -benchmem ./internal/research/array-index > array-index.bench
+$ benchstat -split="XYZ" map.bench array-loop.bench array-index.bench 
+name \ time/op          map.bench    array-loop.bench  array-index.bench
+MarshalText_Color-16    10.3ns ± 0%        7.5ns ± 0%         2.3ns ± 0%
+UnmarshalText_Color-16  11.5ns ± 0%       14.1ns ± 0%        11.5ns ± 0%
+
+name \ alloc/op         map.bench    array-loop.bench  array-index.bench
+MarshalText_Color-16     0.00B             0.00B              0.00B     
+UnmarshalText_Color-16   0.00B             0.00B              0.00B     
+
+name \ allocs/op        map.bench    array-loop.bench  array-index.bench
+MarshalText_Color-16      0.00              0.00               0.00     
+UnmarshalText_Color-16    0.00              0.00               0.00     
+nikolaydubina@Macintosh go-enum-encoding % 
+```
 
 [^1]: Comparison to other enums methods: http://github.com/nikolaydubina/go-enum-example
+[^2]: iso4217 enums performance loop vs map: https://github.com/ferdypruis/iso4217/issues/4
+[^3]: fpmoney: https://github.com/nikolaydubina/fpmoney?tab=readme-ov-file#appendix-a-jsonunmarshal-optimizations
