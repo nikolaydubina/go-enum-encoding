@@ -32,23 +32,23 @@ func TestMain(t *testing.T) {
 	defer exec.Command("go", "tool", "covdata", "textfmt", "-i="+coverdir, "-o", os.Getenv("GOCOVERPROFILE")).Run()
 
 	t.Run("when ok, then file matches expected", func(t *testing.T) {
-		cmd := exec.Command(testbin, "--type", "Color")
-		cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/color.go", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
-		cmd.Run()
+		t.Run("when short mode, then file matches expected", func(t *testing.T) {
+			cmd := exec.Command(testbin, "--type", "Color")
+			cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/color.go", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
+			cmd.Run()
 
-		assertEqFile(t, "internal/testdata/color_enum_encoding.go", "internal/testdata/exp/color_enum_encoding.go")
-		assertEqFile(t, "internal/testdata/color_enum_encoding_test.go", "internal/testdata/exp/color_enum_encoding_test.go")
-	})
+			assertEqFile(t, "internal/testdata/color_enum_encoding.go", "internal/testdata/exp/color_enum_encoding.go")
+			assertEqFile(t, "internal/testdata/color_enum_encoding_test.go", "internal/testdata/exp/color_enum_encoding_test.go")
+		})
 
-	t.Run("when no undefined, then ok", func(t *testing.T) {
-		cmd := exec.Command(testbin, "--type", "NoUndefined")
-		cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/no_undefined.go", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
-		if out, err := cmd.CombinedOutput(); err != nil {
-			t.Fatalf("got error: %s, out: %s", err, string(out))
-		}
+		t.Run("when auto mode, then long can be detected and file matches expected", func(t *testing.T) {
+			cmd := exec.Command(testbin, "--type", "Currency")
+			cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/currency.go", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
+			cmd.Run()
 
-		assertEqFile(t, "internal/testdata/noundefined_enum_encoding.go", "internal/testdata/exp/noundefined_enum_encoding.go")
-		assertEqFile(t, "internal/testdata/noundefined_enum_encoding_test.go", "internal/testdata/exp/noundefined_enum_encoding_test.go")
+			assertEqFile(t, "internal/testdata/currency_enum_encoding.go", "internal/testdata/exp/currency_enum_encoding.go")
+			assertEqFile(t, "internal/testdata/currency_enum_encoding_test.go", "internal/testdata/exp/currency_enum_encoding_test.go")
+		})
 	})
 
 	t.Run("when bad go file, then error", func(t *testing.T) {

@@ -10,11 +10,15 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
 //go:embed enum.go.template
 var templateCode string
+
+//go:embed enum_short.go.template
+var templateShortCode string
 
 //go:embed enum_test.go.template
 var templateTest string
@@ -22,19 +26,21 @@ var templateTest string
 func main() {
 	var (
 		typeName    string
+		mode        string
 		fileName    = os.Getenv("GOFILE")
 		packageName = os.Getenv("GOPACKAGE")
 	)
 	flag.StringVar(&typeName, "type", "", "type to be generated for")
+	flag.StringVar(&mode, "mode", "auto", "what kind of strategy used (short, long, auto)")
 	flag.Parse()
 
-	if err := process(typeName, fileName, packageName); err != nil {
+	if err := process(typeName, fileName, packageName, mode); err != nil {
 		os.Stderr.WriteString(err.Error())
 		os.Exit(1)
 	}
 }
 
-func process(typeName string, fileName string, packageName string) error {
+func process(typeName string, fileName string, packageName string, mode string) error {
 	if typeName == "" || fileName == "" || packageName == "" {
 		return errors.New("type, file and package name must be provided")
 	}
@@ -76,16 +82,34 @@ func process(typeName string, fileName string, packageName string) error {
 	})
 
 	code := templateCode
+
+	if mode == "auto" {
+		mode = "short"
+		if len(specs) >= 10 {
+			mode = "long"
+		}
+	}
+
+	if mode == "short" {
+		code = templateShortCode
+		code = strings.ReplaceAll(code, "{{.json_to_value}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return `case "` + v[1] + "\":\n *s = " + v[0] }), "\n"))
+		code = strings.ReplaceAll(code, "{{.val_to_json}}", strings.Join(mp(specs, func(i int, v [2]string) string {
+			return `case ` + v[0] + ":\n return json_bytes_" + typeName + "[" + strconv.Itoa(i) + `], nil`
+		}), "\n"))
+		code = strings.ReplaceAll(code, "{{.json_bytes}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return `[]byte("` + v[1] + `")` }), ", "))
+	} else {
+		code = strings.ReplaceAll(code, "{{.val_to_json}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return v[0] + `: []byte("` + v[1] + `"),` }), "\n"))
+		code = strings.ReplaceAll(code, "{{.json_to_value}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return `"` + v[1] + `": ` + v[0] + `,` }), "\n"))
+	}
+
 	code = strings.ReplaceAll(code, "{{.Type}}", typeName)
 	code = strings.ReplaceAll(code, "{{.Package}}", packageName)
-	code = strings.ReplaceAll(code, "{{.val_to_json}}", strings.Join(mp(specs, func(v [2]string) string { return v[0] + `: "` + v[1] + `",` }), "\n"))
-	code = strings.ReplaceAll(code, "{{.json_to_value}}", strings.Join(mp(specs, func(v [2]string) string { return `"` + v[1] + `": ` + v[0] + `,` }), "\n"))
 
 	test := templateTest
 	test = strings.ReplaceAll(test, "{{.Type}}", typeName)
 	test = strings.ReplaceAll(test, "{{.Package}}", packageName)
-	test = strings.ReplaceAll(test, "{{.Values}}", strings.Join(mp(specs, func(v [2]string) string { return v[0] }), ", "))
-	test = strings.ReplaceAll(test, "{{.Tags}}", strings.Join(mp(specs, func(v [2]string) string { return `"` + v[1] + `"` }), ","))
+	test = strings.ReplaceAll(test, "{{.Values}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return v[0] }), ", "))
+	test = strings.ReplaceAll(test, "{{.Tags}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return `"` + v[1] + `"` }), ","))
 
 	return errors.Join(
 		writeCode([]byte(code), filepath.Join(filepath.Dir(fileName), strings.ToLower(typeName)+"_enum_encoding.go")),
@@ -93,9 +117,9 @@ func process(typeName string, fileName string, packageName string) error {
 	)
 }
 
-func mp[T any, M any](a []T, f func(T) M) (l []M) {
-	for _, e := range a {
-		l = append(l, f(e))
+func mp[T any, M any](a []T, f func(int, T) M) (l []M) {
+	for i, e := range a {
+		l = append(l, f(i, e))
 	}
 	return l
 }
