@@ -26,6 +26,20 @@ var (
 )
 ```
 
+It also works with raw `iota` enums:
+
+```go
+type Size uint8
+
+//go:generate go-enum-encoding -type=Size
+const (
+	UndefinedSize Size = iota // json:""
+	Small                     // json:"small"
+	Large                     // json:"large"
+	XLarge                    // json:"xlarge"
+)
+```
+
 ## Related Work and References
 
 - http://github.com/zarldev/goenums - does much more advanced struct generation, generates all enum utilities besides encoding, does not generate tests, uses similar notation to trigger go:generate but with different comment directives (non-json field tags)
