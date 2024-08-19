@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"errors"
 	"flag"
+	"fmt"
 	"go/ast"
 	"go/format"
 	"go/parser"
@@ -50,7 +51,8 @@ func process(typeName string, fileName string, packageName string, mode string) 
 		return err
 	}
 
-	f, err := parser.ParseFile(token.NewFileSet(), fileName, inputCode, parser.ParseComments)
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, fileName, inputCode, parser.ParseComments)
 	if err != nil {
 		return err
 	}
@@ -59,7 +61,7 @@ func process(typeName string, fileName string, packageName string, mode string) 
 
 	ast.Inspect(f, func(astNode ast.Node) bool {
 		node, ok := astNode.(*ast.GenDecl)
-		if !ok || node.Tok != token.CONST {
+		if !ok || (node.Tok != token.CONST && node.Tok != token.VAR) {
 			return true
 		}
 
@@ -72,13 +74,30 @@ func process(typeName string, fileName string, packageName string, mode string) 
 			}
 
 			if len(spec.Names) != 1 {
-				return false
+				break
 			}
 
 			if typeFound == nil {
-				typeFound, _ = spec.Type.(*ast.Ident)
+				if spec.Type != nil {
+					// type stated explicitly; e.g.:
+					//   `Green Color = iota + 1 // json:"green"`
+					typeFound, _ = spec.Type.(*ast.Ident)
+				} else if valueFound, ok := spec.Values[0].(*ast.CompositeLit); ok {
+					// type not stated, but is composite (expected struct); e.g.:
+					//   `Green Color = Color{1} // json:"green"`
+					typeFound, ok = valueFound.Type.(*ast.Ident)
+				} else {
+					// type not stated, and is either a literal or an expression,
+					// impossible to infer the enum type name; e.g.:
+					//   `Green = iota + 1 // json:"green"`
+					position := fset.Position(spec.Pos())
+					os.Stderr.WriteString(fmt.Sprintf(
+						"%s: (warning) unable to infer enum type; " +
+						"Add explicit type or use struct type.\n",
+						position))
+				}
 				if typeFound == nil || typeFound.Name != typeName {
-					return false
+					break
 				}
 			}
 
@@ -96,6 +115,11 @@ func process(typeName string, fileName string, packageName string, mode string) 
 
 		return false
 	})
+
+	if len(specs) == 0 {
+		return errors.New(
+			fmt.Sprintf("%s: Unable to find values for enum type %q\n", fileName, typeName))
+	}
 
 	code := templateCode
 
