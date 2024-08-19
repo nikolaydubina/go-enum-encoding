@@ -57,27 +57,43 @@ func process(typeName string, fileName string, packageName string, mode string) 
 
 	var specs [][2]string
 
-	ast.Inspect(f, func(node ast.Node) bool {
-		spec, ok := node.(*ast.ValueSpec)
-		if !ok {
+	ast.Inspect(f, func(astNode ast.Node) bool {
+		node, ok := astNode.(*ast.GenDecl)
+		if !ok || node.Tok != token.CONST {
 			return true
 		}
 
-		if len(spec.Names) != 1 {
-			return false
-		}
-		// TODO: check that type matches
+		var typeFound *ast.Ident
 
-		tag, ok := "", false
-		for _, field := range strings.Fields(spec.Comment.Text()) {
-			if strings.HasPrefix(field, "json:") {
-				tag, ok = field[len("json:\""):len(field)-1], true
-				break
+		for _, astSpec := range node.Specs {
+			spec, ok := astSpec.(*ast.ValueSpec)
+			if !ok {
+				continue
+			}
+
+			if len(spec.Names) != 1 {
+				return false
+			}
+
+			if typeFound == nil {
+				typeFound, _ = spec.Type.(*ast.Ident)
+				if typeFound == nil || typeFound.Name != typeName {
+					return false
+				}
+			}
+
+			tag, ok := "", false
+			for _, field := range strings.Fields(spec.Comment.Text()) {
+				if strings.HasPrefix(field, "json:") {
+					tag, ok = field[len("json:\""):len(field)-1], true
+					break
+				}
+			}
+			if ok {
+				specs = append(specs, [2]string{spec.Names[0].Name, tag})
 			}
 		}
-		if ok {
-			specs = append(specs, [2]string{spec.Names[0].Name, tag})
-		}
+
 		return false
 	})
 
