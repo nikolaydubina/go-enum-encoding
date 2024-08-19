@@ -8,15 +8,15 @@ import (
 	"testing"
 )
 
-func TestJSON_Size(t *testing.T) {
+func TestJSON_Currency2(t *testing.T) {
 	type V struct {
-		Values []Size `json:"values"`
+		Values []Currency2 `json:"values"`
 	}
 
-	values := []Size{UndefinedSize, Small, Large, XLarge}
+	values := []Currency2{UndefCurrency, SGD, USD}
 
 	var v V
-	s := `{"values":["","small","large","xlarge"]}`
+	s := `{"values":["","SGD","USD"]}`
 	json.Unmarshal([]byte(s), &v)
 
 	if len(v.Values) != len(values) {
@@ -41,17 +41,17 @@ func TestJSON_Size(t *testing.T) {
 		if err == nil {
 			t.Errorf("must be error")
 		}
-		if !errors.Is(err, ErrUnknownSize) {
+		if !errors.Is(err, ErrUnknownCurrency2) {
 			t.Errorf("wrong error: %s", err)
 		}
 	})
 }
 
-func BenchmarkMarshalText_Size(b *testing.B) {
+func BenchmarkMarshalText_Currency2(b *testing.B) {
 	var v []byte
 	var err error
 	for i := 0; i < b.N; i++ {
-		for _, c := range []Size{UndefinedSize, Small, Large, XLarge} {
+		for _, c := range []Currency2{UndefCurrency, SGD, USD} {
 			if v, err = c.MarshalText(); err != nil {
 				b.Fatal("empty")
 			}
@@ -62,10 +62,10 @@ func BenchmarkMarshalText_Size(b *testing.B) {
 	}
 }
 
-func BenchmarkUnmarshalText_Size(b *testing.B) {
-	var x Size
+func BenchmarkUnmarshalText_Currency2(b *testing.B) {
+	var x Currency2
 	for i := 0; i < b.N; i++ {
-		for _, c := range []string{"", "small", "large", "xlarge"} {
+		for _, c := range []string{"", "SGD", "USD"} {
 			if err := x.UnmarshalText([]byte(c)); err != nil {
 				b.Fatal("cannot decode")
 			}
