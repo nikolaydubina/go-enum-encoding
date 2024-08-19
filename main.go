@@ -29,19 +29,20 @@ func main() {
 		typeName    string
 		mode        string
 		fileName    = os.Getenv("GOFILE")
+		lineNum     = os.Getenv("GOLINE")
 		packageName = os.Getenv("GOPACKAGE")
 	)
 	flag.StringVar(&typeName, "type", "", "type to be generated for")
 	flag.StringVar(&mode, "mode", "auto", "what kind of strategy used (short, long, auto)")
 	flag.Parse()
 
-	if err := process(typeName, fileName, packageName, mode); err != nil {
+	if err := process(typeName, fileName, lineNum, packageName, mode); err != nil {
 		os.Stderr.WriteString(err.Error())
 		os.Exit(1)
 	}
 }
 
-func process(typeName string, fileName string, packageName string, mode string) error {
+func process(typeName, fileName, lineNum, packageName, mode string) error {
 	if typeName == "" || fileName == "" || packageName == "" {
 		return errors.New("type, file and package name must be provided")
 	}
@@ -57,6 +58,9 @@ func process(typeName string, fileName string, packageName string, mode string) 
 		return err
 	}
 
+	expectedLine, _ := strconv.Atoi(lineNum)
+	expectedLine += 1
+
 	var specs [][2]string
 
 	ast.Inspect(f, func(astNode ast.Node) bool {
@@ -65,7 +69,10 @@ func process(typeName string, fileName string, packageName string, mode string) 
 			return true
 		}
 
-		var typeFound *ast.Ident
+		position := fset.Position(node.Pos())
+		if position.Line != expectedLine {
+			return false
+		}
 
 		for _, astSpec := range node.Specs {
 			spec, ok := astSpec.(*ast.ValueSpec)
@@ -75,30 +82,6 @@ func process(typeName string, fileName string, packageName string, mode string) 
 
 			if len(spec.Names) != 1 {
 				break
-			}
-
-			if typeFound == nil {
-				if spec.Type != nil {
-					// type stated explicitly; e.g.:
-					//   `Green Color = iota + 1 // json:"green"`
-					typeFound, _ = spec.Type.(*ast.Ident)
-				} else if valueFound, ok := spec.Values[0].(*ast.CompositeLit); ok {
-					// type not stated, but is composite (expected struct); e.g.:
-					//   `Green Color = Color{1} // json:"green"`
-					typeFound, ok = valueFound.Type.(*ast.Ident)
-				} else {
-					// type not stated, and is either a literal or an expression,
-					// impossible to infer the enum type name; e.g.:
-					//   `Green = iota + 1 // json:"green"`
-					position := fset.Position(spec.Pos())
-					os.Stderr.WriteString(fmt.Sprintf(
-						"%s: (warning) unable to infer enum type; " +
-						"Add explicit type or use struct type.\n",
-						position))
-				}
-				if typeFound == nil || typeFound.Name != typeName {
-					break
-				}
 			}
 
 			tag, ok := "", false
