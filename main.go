@@ -100,8 +100,7 @@ func process(typeName, fileName, lineNum, packageName, mode string) error {
 	})
 
 	if len(specs) == 0 {
-		return errors.New(
-			fmt.Sprintf("%s: Unable to find values for enum type %q\n", fileName, typeName))
+		return fmt.Errorf("%s: unable to find values for enum type %q", fileName, typeName)
 	}
 
 	code := templateCode
