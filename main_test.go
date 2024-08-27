@@ -47,6 +47,7 @@ func TestMain(t *testing.T) {
 
 			assertFile(t, "color_enum_encoding.go")
 			assertFile(t, "color_enum_encoding_test.go")
+			assertFile(t, "color_enum_encoding_json_test.go")
 		})
 
 		t.Run("when auto mode, then long can be detected and file matches expected", func(t *testing.T) {
@@ -58,6 +59,7 @@ func TestMain(t *testing.T) {
 
 			assertFile(t, "currency_enum_encoding.go")
 			assertFile(t, "currency_enum_encoding_test.go")
+			assertFile(t, "currency_enum_encoding_json_test.go")
 		})
 
 		t.Run("string", func(t *testing.T) {
@@ -70,6 +72,8 @@ func TestMain(t *testing.T) {
 
 				assertFile(t, "colorstring_enum_encoding.go")
 				assertFile(t, "colorstring_enum_encoding_test.go")
+				assertFile(t, "colorstring_enum_encoding_string_test.go")
+				assertFile(t, "colorstring_enum_encoding_json_test.go")
 			})
 
 			t.Run("long", func(t *testing.T) {
@@ -81,6 +85,8 @@ func TestMain(t *testing.T) {
 
 				assertFile(t, "currencystring_enum_encoding.go")
 				assertFile(t, "currencystring_enum_encoding_test.go")
+				assertFile(t, "currencystring_enum_encoding_string_test.go")
+				assertFile(t, "currencystring_enum_encoding_json_test.go")
 			})
 
 			t.Run("custom method", func(t *testing.T) {
@@ -112,6 +118,8 @@ func TestMain(t *testing.T) {
 
 			assertFile(t, "color2_enum_encoding.go")
 			assertFile(t, "color2_enum_encoding_test.go")
+			assertFile(t, "color2_enum_encoding_string_test.go")
+			assertFile(t, "color2_enum_encoding_json_test.go")
 
 			cmd = exec.Command(testbin, "--type", "Currency2")
 			cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(outdir, "multiple.go"), "GOLINE=12", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
@@ -119,6 +127,8 @@ func TestMain(t *testing.T) {
 
 			assertFile(t, "currency2_enum_encoding.go")
 			assertFile(t, "currency2_enum_encoding_test.go")
+			assertFile(t, "currency2_enum_encoding_string_test.go")
+			assertFile(t, "currency2_enum_encoding_json_test.go")
 		})
 	})
 
