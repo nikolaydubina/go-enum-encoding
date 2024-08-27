@@ -4,8 +4,26 @@ package color
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 )
+
+func ExampleCurrency_MarshalText() {
+	for _, v := range []Currency{UndefinedCurrency, SGD, USD, GBP, KRW, HKD, JPY, MYR, BHT, THC, CBD, XYZ} {
+		b, _ := v.MarshalText()
+		fmt.Printf("%s ", string(b))
+	}
+	// Output:  SGD USD GBP KRW HKD JPY MYR BHT THC CBD XYZ
+}
+
+func ExampleCurrency_UnmarshalText() {
+	for _, s := range []string{"", "SGD", "USD", "GBP", "KRW", "HKD", "JPY", "MYR", "BHT", "THC", "CBD", "XYZ"} {
+		var v Currency
+		if err := (&v).UnmarshalText([]byte(s)); err != nil {
+			fmt.Println(err)
+		}
+	}
+}
 
 func TestCurrency_MarshalText_UnmarshalText(t *testing.T) {
 	for _, v := range []Currency{UndefinedCurrency, SGD, USD, GBP, KRW, HKD, JPY, MYR, BHT, THC, CBD, XYZ} {

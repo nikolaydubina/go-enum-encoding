@@ -4,8 +4,26 @@ package color
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 )
+
+func ExampleColorString_MarshalText() {
+	for _, v := range []ColorString{RedS, GreenS, BlueS} {
+		b, _ := v.MarshalText()
+		fmt.Printf("%s ", string(b))
+	}
+	// Output: red green blue
+}
+
+func ExampleColorString_UnmarshalText() {
+	for _, s := range []string{"red", "green", "blue"} {
+		var v ColorString
+		if err := (&v).UnmarshalText([]byte(s)); err != nil {
+			fmt.Println(err)
+		}
+	}
+}
 
 func TestColorString_MarshalText_UnmarshalText(t *testing.T) {
 	for _, v := range []ColorString{RedS, GreenS, BlueS} {

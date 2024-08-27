@@ -3,9 +3,27 @@
 package {{.Package}}
 
 import (
+	"fmt"
 	"testing"
 	"errors"
 )
+
+func Example{{.Type}}_{{.EncodeMethod}}() {
+	for _, v := range []{{.Type}}{{{.Values}}} {
+		b, _ := v.{{.EncodeMethod}}()
+		fmt.Printf("%s ", string(b))
+	}
+	// Output: {{.TagsNaked}}
+}
+
+func Example{{.Type}}_{{.DecodeMethod}}() {
+	for _, s := range []string{{{.Tags}}} {
+		var v {{.Type}}
+		if err := (&v).{{.DecodeMethod}}([]byte(s)); err != nil {
+			fmt.Println(err)
+		}
+	}
+}
 
 func Test{{.Type}}_{{.EncodeMethod}}_{{.DecodeMethod}}(t *testing.T) {
 	for _, v := range []{{.Type}}{{{.Values}}} {

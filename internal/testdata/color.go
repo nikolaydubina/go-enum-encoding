@@ -2,7 +2,6 @@ package color
 
 type Color struct{ c uint8 }
 
-//go:generate go-enum-encoding -type=Color
 var (
 	UndefinedColor = Color{}            // json:""
 	Red            = Color{1}           // json:"red"
@@ -17,7 +16,6 @@ type V struct {
 
 type ColorString int
 
-//go:generate go-enum-encoding -type=ColorString -string
 const (
 	RedS   ColorString = iota // json:"red"
 	GreenS                    // json:"green"
