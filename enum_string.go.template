@@ -1,4 +1,5 @@
-func (s {{.Type}}) String() string {
-    b, _ := s.MarshalText()
-    return string(b)
+var value_to_string_{{.Type}} = map[{{.Type}}]string{
+    {{.value_to_string}}
 }
+
+func (s {{.Type}}) String() string { return value_to_string_{{.Type}}[s] }

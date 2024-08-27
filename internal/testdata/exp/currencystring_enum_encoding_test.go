@@ -9,12 +9,12 @@ import (
 	"testing"
 )
 
-func TestJSON_Currency(t *testing.T) {
+func TestJSON_CurrencyString(t *testing.T) {
 	type V struct {
-		Values []Currency `json:"values"`
+		Values []CurrencyString `json:"values"`
 	}
 
-	values := []Currency{UndefinedCurrency, SGD, USD, GBP, KRW, HKD, JPY, MYR, BHT, THC, CBD, XYZ}
+	values := []CurrencyString{UndefinedCurrencyS, SGDS, USDS, GBPS, KRWS, HKDS, JPYS, MYRS, BHTS, THCS, CBDS, XYZS}
 
 	var v V
 	s := `{"values":["","SGD","USD","GBP","KRW","HKD","JPY","MYR","BHT","THC","CBD","XYZ"]}`
@@ -42,17 +42,17 @@ func TestJSON_Currency(t *testing.T) {
 		if err == nil {
 			t.Errorf("must be error")
 		}
-		if !errors.Is(err, ErrUnknownCurrency) {
+		if !errors.Is(err, ErrUnknownCurrencyString) {
 			t.Errorf("wrong error: %s", err)
 		}
 	})
 }
 
-func BenchmarkMarshalText_Currency(b *testing.B) {
+func BenchmarkMarshalText_CurrencyString(b *testing.B) {
 	var v []byte
 	var err error
 	for i := 0; i < b.N; i++ {
-		for _, c := range []Currency{UndefinedCurrency, SGD, USD, GBP, KRW, HKD, JPY, MYR, BHT, THC, CBD, XYZ} {
+		for _, c := range []CurrencyString{UndefinedCurrencyS, SGDS, USDS, GBPS, KRWS, HKDS, JPYS, MYRS, BHTS, THCS, CBDS, XYZS} {
 			if v, err = c.MarshalText(); err != nil {
 				b.Fatal("empty")
 			}
@@ -63,13 +63,36 @@ func BenchmarkMarshalText_Currency(b *testing.B) {
 	}
 }
 
-func BenchmarkUnmarshalText_Currency(b *testing.B) {
-	var x Currency
+func BenchmarkUnmarshalText_CurrencyString(b *testing.B) {
+	var x CurrencyString
 	for i := 0; i < b.N; i++ {
 		for _, c := range []string{"", "SGD", "USD", "GBP", "KRW", "HKD", "JPY", "MYR", "BHT", "THC", "CBD", "XYZ"} {
 			if err := x.UnmarshalText([]byte(c)); err != nil {
 				b.Fatal("cannot decode")
 			}
 		}
+	}
+}
+
+func TestCurrencyString_String(t *testing.T) {
+	values := []CurrencyString{UndefinedCurrencyS, SGDS, USDS, GBPS, KRWS, HKDS, JPYS, MYRS, BHTS, THCS, CBDS, XYZS}
+	tags := []string{"", "SGD", "USD", "GBP", "KRW", "HKD", "JPY", "MYR", "BHT", "THC", "CBD", "XYZ"}
+
+	for i := range values {
+		if values[i].String() != tags[i] {
+			t.Errorf("got(%s) != exp(%s)", values[i].String(), tags[i])
+		}
+	}
+}
+
+func BenchmarkCurrencyString_String(b *testing.B) {
+	var v string
+	for i := 0; i < b.N; i++ {
+		for _, c := range []CurrencyString{UndefinedCurrencyS, SGDS, USDS, GBPS, KRWS, HKDS, JPYS, MYRS, BHTS, THCS, CBDS, XYZS} {
+			v = c.String()
+		}
+	}
+	if len(v) > 1000 {
+		b.Fatal("noop")
 	}
 }
