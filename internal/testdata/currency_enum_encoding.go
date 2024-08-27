@@ -6,7 +6,7 @@ import "errors"
 
 var ErrUnknownCurrency = errors.New("unknown Currency")
 
-var vals_Currency = map[Currency][]byte{
+var value_to_bytes_Currency = map[Currency][]byte{
 	UndefinedCurrency: []byte(""),
 	SGD:               []byte("SGD"),
 	USD:               []byte("USD"),
@@ -21,7 +21,7 @@ var vals_Currency = map[Currency][]byte{
 	XYZ:               []byte("XYZ"),
 }
 
-var vals_inv_Currency = map[string]Currency{
+var string_to_value_Currency = map[string]Currency{
 	"":    UndefinedCurrency,
 	"SGD": SGD,
 	"USD": USD,
@@ -38,10 +38,10 @@ var vals_inv_Currency = map[string]Currency{
 
 func (s *Currency) UnmarshalText(text []byte) error {
 	var ok bool
-	if *s, ok = vals_inv_Currency[string(text)]; !ok {
+	if *s, ok = string_to_value_Currency[string(text)]; !ok {
 		return ErrUnknownCurrency
 	}
 	return nil
 }
 
-func (s Currency) MarshalText() ([]byte, error) { return vals_Currency[s], nil }
+func (s Currency) MarshalText() ([]byte, error) { return value_to_bytes_Currency[s], nil }

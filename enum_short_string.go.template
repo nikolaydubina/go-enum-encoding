@@ -1,0 +1,10 @@
+var seq_string_{{.Type}} = [...]string{{{.seq_string}}}
+
+func (s {{.Type}}) String() string {
+	switch s {
+    {{.value_to_string}}
+	default:
+		return ""
+	}
+}
+

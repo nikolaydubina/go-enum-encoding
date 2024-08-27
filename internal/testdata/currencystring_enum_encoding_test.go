@@ -9,15 +9,15 @@ import (
 	"testing"
 )
 
-func TestJSON_ColorString(t *testing.T) {
+func TestJSON_CurrencyString(t *testing.T) {
 	type V struct {
-		Values []ColorString `json:"values"`
+		Values []CurrencyString `json:"values"`
 	}
 
-	values := []ColorString{RedS, GreenS, BlueS}
+	values := []CurrencyString{UndefinedCurrencyS, SGDS, USDS, GBPS, KRWS, HKDS, JPYS, MYRS, BHTS, THCS, CBDS, XYZS}
 
 	var v V
-	s := `{"values":["red","green","blue"]}`
+	s := `{"values":["","SGD","USD","GBP","KRW","HKD","JPY","MYR","BHT","THC","CBD","XYZ"]}`
 	json.Unmarshal([]byte(s), &v)
 
 	if len(v.Values) != len(values) {
@@ -42,17 +42,17 @@ func TestJSON_ColorString(t *testing.T) {
 		if err == nil {
 			t.Errorf("must be error")
 		}
-		if !errors.Is(err, ErrUnknownColorString) {
+		if !errors.Is(err, ErrUnknownCurrencyString) {
 			t.Errorf("wrong error: %s", err)
 		}
 	})
 }
 
-func BenchmarkMarshalText_ColorString(b *testing.B) {
+func BenchmarkMarshalText_CurrencyString(b *testing.B) {
 	var v []byte
 	var err error
 	for i := 0; i < b.N; i++ {
-		for _, c := range []ColorString{RedS, GreenS, BlueS} {
+		for _, c := range []CurrencyString{UndefinedCurrencyS, SGDS, USDS, GBPS, KRWS, HKDS, JPYS, MYRS, BHTS, THCS, CBDS, XYZS} {
 			if v, err = c.MarshalText(); err != nil {
 				b.Fatal("empty")
 			}
@@ -63,10 +63,10 @@ func BenchmarkMarshalText_ColorString(b *testing.B) {
 	}
 }
 
-func BenchmarkUnmarshalText_ColorString(b *testing.B) {
-	var x ColorString
+func BenchmarkUnmarshalText_CurrencyString(b *testing.B) {
+	var x CurrencyString
 	for i := 0; i < b.N; i++ {
-		for _, c := range []string{"red", "green", "blue"} {
+		for _, c := range []string{"", "SGD", "USD", "GBP", "KRW", "HKD", "JPY", "MYR", "BHT", "THC", "CBD", "XYZ"} {
 			if err := x.UnmarshalText([]byte(c)); err != nil {
 				b.Fatal("cannot decode")
 			}
@@ -74,9 +74,9 @@ func BenchmarkUnmarshalText_ColorString(b *testing.B) {
 	}
 }
 
-func TestColorString_String(t *testing.T) {
-	values := []ColorString{RedS, GreenS, BlueS}
-	tags := []string{"red", "green", "blue"}
+func TestCurrencyString_String(t *testing.T) {
+	values := []CurrencyString{UndefinedCurrencyS, SGDS, USDS, GBPS, KRWS, HKDS, JPYS, MYRS, BHTS, THCS, CBDS, XYZS}
+	tags := []string{"", "SGD", "USD", "GBP", "KRW", "HKD", "JPY", "MYR", "BHT", "THC", "CBD", "XYZ"}
 
 	for i := range values {
 		if values[i].String() != tags[i] {
@@ -85,10 +85,10 @@ func TestColorString_String(t *testing.T) {
 	}
 }
 
-func BenchmarkColorString_String(b *testing.B) {
+func BenchmarkCurrencyString_String(b *testing.B) {
 	var v string
 	for i := 0; i < b.N; i++ {
-		for _, c := range []ColorString{RedS, GreenS, BlueS} {
+		for _, c := range []CurrencyString{UndefinedCurrencyS, SGDS, USDS, GBPS, KRWS, HKDS, JPYS, MYRS, BHTS, THCS, CBDS, XYZS} {
 			v = c.String()
 		}
 	}

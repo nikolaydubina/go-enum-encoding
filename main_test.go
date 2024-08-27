@@ -1,6 +1,8 @@
 package main_test
 
 import (
+	"bytes"
+	"io"
 	"os"
 	"os/exec"
 	"path"
@@ -41,15 +43,6 @@ func TestMain(t *testing.T) {
 			assertEqFile(t, "internal/testdata/color_enum_encoding_test.go", "internal/testdata/exp/color_enum_encoding_test.go")
 		})
 
-		t.Run("when string enabled, then file matches expected", func(t *testing.T) {
-			cmd := exec.Command(testbin, "--type", "ColorString", "--string")
-			cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/color.go", "GOLINE=20", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
-			cmd.Run()
-
-			assertEqFile(t, "internal/testdata/colorstring_enum_encoding.go", "internal/testdata/exp/colorstring_enum_encoding.go")
-			assertEqFile(t, "internal/testdata/colorstring_enum_encoding_test.go", "internal/testdata/exp/colorstring_enum_encoding_test.go")
-		})
-
 		t.Run("when auto mode, then long can be detected and file matches expected", func(t *testing.T) {
 			cmd := exec.Command(testbin, "--type", "Currency")
 			cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/currency.go", "GOLINE=5", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
@@ -57,6 +50,32 @@ func TestMain(t *testing.T) {
 
 			assertEqFile(t, "internal/testdata/currency_enum_encoding.go", "internal/testdata/exp/currency_enum_encoding.go")
 			assertEqFile(t, "internal/testdata/currency_enum_encoding_test.go", "internal/testdata/exp/currency_enum_encoding_test.go")
+		})
+
+		t.Run("string", func(t *testing.T) {
+			t.Run("short", func(t *testing.T) {
+				var errb bytes.Buffer
+
+				cmd := exec.Command(testbin, "--type", "ColorString", "--string")
+				cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/color.go", "GOLINE=20", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
+				cmd.Stderr = &errb
+				cmd.Run()
+
+				assertEqFile(t, "internal/testdata/colorstring_enum_encoding.go", "internal/testdata/exp/colorstring_enum_encoding.go")
+				assertEqFile(t, "internal/testdata/colorstring_enum_encoding_test.go", "internal/testdata/exp/colorstring_enum_encoding_test.go")
+				if errb, err := io.ReadAll(&errb); len(errb) > 0 || err != nil {
+					t.Errorf("stderr: %s", string(errb))
+				}
+			})
+
+			t.Run("long", func(t *testing.T) {
+				cmd := exec.Command(testbin, "--type", "CurrencyString", "--mode", "long", "--string")
+				cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/currency_string.go", "GOLINE=5", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
+				cmd.Run()
+
+				assertEqFile(t, "internal/testdata/currencystring_enum_encoding.go", "internal/testdata/exp/currencystring_enum_encoding.go")
+				assertEqFile(t, "internal/testdata/currencystring_enum_encoding_test.go", "internal/testdata/exp/currencystring_enum_encoding_test.go")
+			})
 		})
 
 		t.Run("when multiple enums in same file, then file matches expected for each", func(t *testing.T) {

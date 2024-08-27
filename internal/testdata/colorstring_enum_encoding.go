@@ -20,22 +20,32 @@ func (s *ColorString) UnmarshalText(text []byte) error {
 	return nil
 }
 
-var json_bytes_ColorString = [...][]byte{[]byte("red"), []byte("green"), []byte("blue")}
+var seq_bytes_ColorString = [...][]byte{[]byte("red"), []byte("green"), []byte("blue")}
 
 func (s ColorString) MarshalText() ([]byte, error) {
 	switch s {
 	case RedS:
-		return json_bytes_ColorString[0], nil
+		return seq_bytes_ColorString[0], nil
 	case GreenS:
-		return json_bytes_ColorString[1], nil
+		return seq_bytes_ColorString[1], nil
 	case BlueS:
-		return json_bytes_ColorString[2], nil
+		return seq_bytes_ColorString[2], nil
 	default:
 		return nil, ErrUnknownColorString
 	}
 }
 
+var seq_string_ColorString = [...]string{"red", "green", "blue"}
+
 func (s ColorString) String() string {
-	b, _ := s.MarshalText()
-	return string(b)
+	switch s {
+	case RedS:
+		return seq_string_ColorString[0]
+	case GreenS:
+		return seq_string_ColorString[1]
+	case BlueS:
+		return seq_string_ColorString[2]
+	default:
+		return ""
+	}
 }

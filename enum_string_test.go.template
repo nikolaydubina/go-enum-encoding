@@ -8,3 +8,15 @@ func Test{{.Type}}_String(t *testing.T) {
 		}	
 	}
 }
+
+func Benchmark{{.Type}}_String(b *testing.B) {
+	var v string
+	for i := 0; i < b.N; i++ {
+		for _, c := range []{{.Type}}{{{.Values}}} {
+			v = c.String()
+		}
+	}
+	if len(v) > 1000 {
+		b.Fatal("noop")
+	}
+}

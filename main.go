@@ -27,6 +27,9 @@ var templateTest string
 //go:embed enum_string.go.template
 var templateString string
 
+//go:embed enum_short_string.go.template
+var templateShortString string
+
 //go:embed enum_string_test.go.template
 var templateStringTest string
 
@@ -122,18 +125,27 @@ func process(typeName, fileName, lineNum, packageName, mode string, enableString
 
 	if mode == "short" {
 		code = templateShortCode
-		code = strings.ReplaceAll(code, "{{.json_to_value}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return `case "` + v[1] + "\":\n *s = " + v[0] }), "\n"))
-		code = strings.ReplaceAll(code, "{{.val_to_json}}", strings.Join(mp(specs, func(i int, v [2]string) string {
-			return `case ` + v[0] + ":\n return json_bytes_" + typeName + "[" + strconv.Itoa(i) + `], nil`
+		code = strings.ReplaceAll(code, "{{.string_to_value}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return `case "` + v[1] + "\":\n *s = " + v[0] }), "\n"))
+		code = strings.ReplaceAll(code, "{{.value_to_bytes}}", strings.Join(mp(specs, func(i int, v [2]string) string {
+			return `case ` + v[0] + ":\n return seq_bytes_" + typeName + "[" + strconv.Itoa(i) + `], nil`
 		}), "\n"))
-		code = strings.ReplaceAll(code, "{{.json_bytes}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return `[]byte("` + v[1] + `")` }), ", "))
-	} else {
-		code = strings.ReplaceAll(code, "{{.val_to_json}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return v[0] + `: []byte("` + v[1] + `"),` }), "\n"))
-		code = strings.ReplaceAll(code, "{{.json_to_value}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return `"` + v[1] + `": ` + v[0] + `,` }), "\n"))
-	}
+		code = strings.ReplaceAll(code, "{{.seq_bytes}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return `[]byte("` + v[1] + `")` }), ", "))
 
-	if enableString {
-		code += "\n" + templateString
+		if enableString {
+			code += "\n" + templateShortString
+			code = strings.ReplaceAll(code, "{{.value_to_string}}", strings.Join(mp(specs, func(i int, v [2]string) string {
+				return `case ` + v[0] + ":\n return seq_string_" + typeName + "[" + strconv.Itoa(i) + `]`
+			}), "\n"))
+			code = strings.ReplaceAll(code, "{{.seq_string}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return `"` + v[1] + `"` }), ", "))
+		}
+	} else {
+		code = strings.ReplaceAll(code, "{{.value_to_bytes}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return v[0] + `: []byte("` + v[1] + `"),` }), "\n"))
+		code = strings.ReplaceAll(code, "{{.string_to_value}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return `"` + v[1] + `": ` + v[0] + `,` }), "\n"))
+
+		if enableString {
+			code += "\n" + templateString
+			code = strings.ReplaceAll(code, "{{.value_to_string}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return v[0] + `: "` + v[1] + `",` }), "\n"))
+		}
 	}
 
 	code = strings.ReplaceAll(code, "{{.Type}}", typeName)
