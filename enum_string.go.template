@@ -1,5 +1,5 @@
 var value_to_string_{{.Type}} = map[{{.Type}}]string{
-    {{.value_to_string}}
+    {{.value_to_string_map}}
 }
 
-func (s {{.Type}}) String() string { return value_to_string_{{.Type}}[s] }
+func (s {{.Type}}) {{.StringMethod}}() string { return value_to_string_{{.Type}}[s] }

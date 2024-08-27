@@ -3,42 +3,31 @@
 package color
 
 import (
-	"encoding/json"
 	"errors"
-	"slices"
 	"testing"
 )
 
-func TestJSON_Currency2(t *testing.T) {
-	type V struct {
-		Values []Currency2 `json:"values"`
-	}
+func TestCurrency2_MarshalText_UnmarshalText(t *testing.T) {
+	for _, v := range []Currency2{UndefCurrency2, SGD2, USD2} {
+		b, err := v.MarshalText()
+		if err != nil {
+			t.Errorf("cannot encode: %s", err)
+		}
 
-	values := []Currency2{UndefCurrency2, SGD2, USD2}
+		var d Currency2
+		if err := (&d).UnmarshalText(b); err != nil {
+			t.Errorf("cannot decode: %s", err)
+		}
 
-	var v V
-	s := `{"values":["","SGD","USD"]}`
-	json.Unmarshal([]byte(s), &v)
-
-	if len(v.Values) != len(values) {
-		t.Errorf("cannot decode: %d", len(v.Values))
-	}
-	if !slices.Equal(v.Values, values) {
-		t.Errorf("wrong decoded: %v", v.Values)
-	}
-
-	b, err := json.Marshal(v)
-	if err != nil {
-		t.Fatalf("cannot encode: %s", err)
-	}
-	if string(b) != s {
-		t.Errorf("wrong encoded: %s != %s", string(b), s)
+		if d != v {
+			t.Errorf("exp(%v) != got(%v)", v, d)
+		}
 	}
 
 	t.Run("when unknown value, then error", func(t *testing.T) {
-		s := `{"values":["something"]}`
-		var v V
-		err := json.Unmarshal([]byte(s), &v)
+		s := `something`
+		var v Currency2
+		err := (&v).UnmarshalText([]byte(s))
 		if err == nil {
 			t.Errorf("must be error")
 		}
@@ -48,7 +37,7 @@ func TestJSON_Currency2(t *testing.T) {
 	})
 }
 
-func BenchmarkMarshalText_Currency2(b *testing.B) {
+func BenchmarkCurrency2_MarshalText(b *testing.B) {
 	var v []byte
 	var err error
 	for i := 0; i < b.N; i++ {
@@ -63,7 +52,7 @@ func BenchmarkMarshalText_Currency2(b *testing.B) {
 	}
 }
 
-func BenchmarkUnmarshalText_Currency2(b *testing.B) {
+func BenchmarkCurrency2_UnmarshalText(b *testing.B) {
 	var x Currency2
 	for i := 0; i < b.N; i++ {
 		for _, c := range []string{"", "SGD", "USD"} {

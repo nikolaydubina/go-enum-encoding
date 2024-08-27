@@ -76,6 +76,23 @@ func TestMain(t *testing.T) {
 				assertEqFile(t, "internal/testdata/currencystring_enum_encoding.go", "internal/testdata/exp/currencystring_enum_encoding.go")
 				assertEqFile(t, "internal/testdata/currencystring_enum_encoding_test.go", "internal/testdata/exp/currencystring_enum_encoding_test.go")
 			})
+
+			t.Run("custom method", func(t *testing.T) {
+				cmd := exec.Command(
+					testbin,
+					"--type", "CurrencyStringCustom",
+					"--mode", "long",
+					"--string",
+					"--encode-method", "MarshalTextName",
+					"--decode-method", "UnmarshalTextName",
+					"--string-method", "StringName",
+				)
+				cmd.Env = append(cmd.Environ(), "GOFILE=internal/testdata/currency_string_custom.go", "GOLINE=5", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
+				cmd.Run()
+
+				assertEqFile(t, "internal/testdata/currencystringcustom_enum_encoding.go", "internal/testdata/exp/currencystringcustom_enum_encoding.go")
+				assertEqFile(t, "internal/testdata/currencystringcustom_enum_encoding_test.go", "internal/testdata/exp/currencystringcustom_enum_encoding_test.go")
+			})
 		})
 
 		t.Run("when multiple enums in same file, then file matches expected for each", func(t *testing.T) {

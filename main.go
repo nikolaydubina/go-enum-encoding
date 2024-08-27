@@ -1,10 +1,10 @@
 package main
 
 import (
+	"bytes"
 	_ "embed"
 	"errors"
 	"flag"
-	"fmt"
 	"go/ast"
 	"go/format"
 	"go/parser"
@@ -22,40 +22,78 @@ var templateCode string
 var templateShortCode string
 
 //go:embed enum_test.go.template
-var templateTest string
+var templateTest []byte
+
+//go:embed enum_json_test.go.template
+var templateJSONTest []byte
 
 //go:embed enum_string.go.template
 var templateString string
 
-//go:embed enum_short_string.go.template
-var templateShortString string
+//go:embed enum_string_short.go.template
+var templateStringShort string
 
 //go:embed enum_string_test.go.template
-var templateStringTest string
+var templateStringTest []byte
 
 func main() {
 	var (
 		typeName     string
 		mode         string
 		enableString bool
+		encodeMethod string
+		decodeMethod string
+		stringMethod string
 		fileName     = os.Getenv("GOFILE")
 		lineNum      = os.Getenv("GOLINE")
 		packageName  = os.Getenv("GOPACKAGE")
 	)
 	flag.StringVar(&typeName, "type", "", "type to be generated for")
 	flag.StringVar(&mode, "mode", "auto", "what kind of strategy used (short, long, auto)")
+	flag.StringVar(&encodeMethod, "encode-method", "MarshalText", "name of method to use for text encoding")
+	flag.StringVar(&decodeMethod, "decode-method", "UnmarshalText", "name of method to use for text decoding")
+	flag.StringVar(&stringMethod, "string-method", "String", "name of method to use for string")
 	flag.BoolVar(&enableString, "string", false, "generate String() method")
 	flag.Parse()
 
-	if err := process(typeName, fileName, lineNum, packageName, mode, enableString); err != nil {
+	if err := process(typeName, fileName, lineNum, packageName, mode, encodeMethod, decodeMethod, stringMethod, enableString); err != nil {
 		os.Stderr.WriteString(err.Error())
 		os.Exit(1)
 	}
 }
 
-func process(typeName, fileName, lineNum, packageName, mode string, enableString bool) error {
-	if typeName == "" || fileName == "" || packageName == "" {
-		return errors.New("type, file and package name must be provided")
+type replacer struct {
+	vals  map[string]string
+	specs [][2]string
+}
+
+func (r *replacer) With(k, v string) *replacer {
+	r.vals[k] = v
+	return r
+}
+
+func (r *replacer) WithMap(k string, f func(idx int, val [2]string) string, sep string) *replacer {
+	var b strings.Builder
+	for i, v := range r.specs {
+		if i > 0 {
+			b.WriteString(sep)
+		}
+		b.WriteString(f(i, v))
+	}
+	r.vals[k] = b.String()
+	return r
+}
+
+func (r *replacer) Apply(s []byte) []byte {
+	for k, v := range r.vals {
+		s = bytes.ReplaceAll(s, []byte(k), []byte(v))
+	}
+	return []byte(s)
+}
+
+func process(typeName, fileName, lineNum, packageName, mode, encodeMethod, decodeMethod, stringMethod string, enableString bool) error {
+	if typeName == "" || fileName == "" || packageName == "" || lineNum == "" || encodeMethod == "" || decodeMethod == "" || stringMethod == "" {
+		return errors.New("missing parameters")
 	}
 
 	inputCode, err := os.ReadFile(fileName)
@@ -111,8 +149,19 @@ func process(typeName, fileName, lineNum, packageName, mode string, enableString
 	})
 
 	if len(specs) == 0 {
-		return fmt.Errorf("%s: unable to find values for enum type %q", fileName, typeName)
+		return errors.New(fileName + ": unable to find values for enum type: " + typeName)
 	}
+
+	r := (&replacer{vals: make(map[string]string), specs: specs}).
+		With("{{.Type}}", typeName).
+		With("{{.Package}}", packageName).
+		With("{{.EncodeMethod}}", encodeMethod).
+		With("{{.DecodeMethod}}", decodeMethod).
+		With("{{.StringMethod}}", stringMethod).
+		WithMap("{{.Values}}", func(_ int, v [2]string) string { return v[0] }, ", ").
+		WithMap("{{.Tags}}", func(_ int, v [2]string) string { return `"` + v[1] + `"` }, ",").
+		WithMap("{{.seq_bytes}}", func(_ int, v [2]string) string { return `[]byte("` + v[1] + `")` }, ", ").
+		WithMap("{{.seq_string}}", func(_ int, v [2]string) string { return `"` + v[1] + `"` }, ", ")
 
 	code := templateCode
 
@@ -125,54 +174,45 @@ func process(typeName, fileName, lineNum, packageName, mode string, enableString
 
 	if mode == "short" {
 		code = templateShortCode
-		code = strings.ReplaceAll(code, "{{.string_to_value}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return `case "` + v[1] + "\":\n *s = " + v[0] }), "\n"))
-		code = strings.ReplaceAll(code, "{{.value_to_bytes}}", strings.Join(mp(specs, func(i int, v [2]string) string {
-			return `case ` + v[0] + ":\n return seq_bytes_" + typeName + "[" + strconv.Itoa(i) + `], nil`
-		}), "\n"))
-		code = strings.ReplaceAll(code, "{{.seq_bytes}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return `[]byte("` + v[1] + `")` }), ", "))
-
 		if enableString {
-			code += "\n" + templateShortString
-			code = strings.ReplaceAll(code, "{{.value_to_string}}", strings.Join(mp(specs, func(i int, v [2]string) string {
-				return `case ` + v[0] + ":\n return seq_string_" + typeName + "[" + strconv.Itoa(i) + `]`
-			}), "\n"))
-			code = strings.ReplaceAll(code, "{{.seq_string}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return `"` + v[1] + `"` }), ", "))
+			code += "\n" + templateStringShort
 		}
+		r = r.
+			WithMap("{{.string_to_value_switch}}", func(_ int, v [2]string) string { return `case "` + v[1] + "\":\n *s = " + v[0] }, "\n").
+			WithMap("{{.value_to_bytes_switch}}", func(i int, v [2]string) string {
+				return `case ` + v[0] + ":\n return seq_bytes_" + typeName + "[" + strconv.Itoa(i) + `], nil`
+			}, "\n").
+			WithMap("{{.value_to_string_switch}}", func(i int, v [2]string) string {
+				return `case ` + v[0] + ":\n return seq_string_" + typeName + "[" + strconv.Itoa(i) + `]`
+			}, "\n")
 	} else {
-		code = strings.ReplaceAll(code, "{{.value_to_bytes}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return v[0] + `: []byte("` + v[1] + `"),` }), "\n"))
-		code = strings.ReplaceAll(code, "{{.string_to_value}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return `"` + v[1] + `": ` + v[0] + `,` }), "\n"))
-
+		r = r.
+			WithMap("{{.string_to_value_map}}", func(_ int, v [2]string) string { return `"` + v[1] + `": ` + v[0] + `,` }, "\n").
+			WithMap("{{.value_to_string_map}}", func(_ int, v [2]string) string { return v[0] + `: "` + v[1] + `",` }, "\n").
+			WithMap("{{.value_to_bytes_map}}", func(_ int, v [2]string) string { return v[0] + `: []byte("` + v[1] + `"),` }, "\n")
 		if enableString {
 			code += "\n" + templateString
-			code = strings.ReplaceAll(code, "{{.value_to_string}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return v[0] + `: "` + v[1] + `",` }), "\n"))
 		}
 	}
 
-	code = strings.ReplaceAll(code, "{{.Type}}", typeName)
-	code = strings.ReplaceAll(code, "{{.Package}}", packageName)
-
-	test := templateTest
+	bastPath := filepath.Join(filepath.Dir(fileName), strings.ToLower(typeName))
 
 	if enableString {
-		test += "\n" + templateStringTest
+		if err := writeCode(r.Apply(templateStringTest), bastPath+"_enum_encoding_sting_test.go"); err != nil {
+			return err
+		}
 	}
 
-	test = strings.ReplaceAll(test, "{{.Type}}", typeName)
-	test = strings.ReplaceAll(test, "{{.Package}}", packageName)
-	test = strings.ReplaceAll(test, "{{.Values}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return v[0] }), ", "))
-	test = strings.ReplaceAll(test, "{{.Tags}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return `"` + v[1] + `"` }), ","))
+	if decodeMethod == "UnmarshalText" && encodeMethod == "MarshalText" {
+		if err := writeCode(r.Apply(templateJSONTest), bastPath+"_enum_encoding_json_test.go"); err != nil {
+			return err
+		}
+	}
 
 	return errors.Join(
-		writeCode([]byte(code), filepath.Join(filepath.Dir(fileName), strings.ToLower(typeName)+"_enum_encoding.go")),
-		writeCode([]byte(test), filepath.Join(filepath.Dir(fileName), strings.ToLower(typeName)+"_enum_encoding_test.go")),
+		writeCode(r.Apply([]byte(code)), bastPath+"_enum_encoding.go"),
+		writeCode(r.Apply(templateTest), bastPath+"_enum_encoding_test.go"),
 	)
-}
-
-func mp[T any, M any](a []T, f func(int, T) M) (l []M) {
-	for i, e := range a {
-		l = append(l, f(i, e))
-	}
-	return l
 }
 
 func writeCode(code []byte, outFilePath string) error {

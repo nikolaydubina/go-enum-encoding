@@ -3,42 +3,31 @@
 package color
 
 import (
-	"encoding/json"
 	"errors"
-	"slices"
 	"testing"
 )
 
-func TestJSON_CurrencyString(t *testing.T) {
-	type V struct {
-		Values []CurrencyString `json:"values"`
-	}
+func TestCurrencyString_MarshalText_UnmarshalText(t *testing.T) {
+	for _, v := range []CurrencyString{UndefinedCurrencyS, SGDS, USDS, GBPS, KRWS, HKDS, JPYS, MYRS, BHTS, THCS, CBDS, XYZS} {
+		b, err := v.MarshalText()
+		if err != nil {
+			t.Errorf("cannot encode: %s", err)
+		}
 
-	values := []CurrencyString{UndefinedCurrencyS, SGDS, USDS, GBPS, KRWS, HKDS, JPYS, MYRS, BHTS, THCS, CBDS, XYZS}
+		var d CurrencyString
+		if err := (&d).UnmarshalText(b); err != nil {
+			t.Errorf("cannot decode: %s", err)
+		}
 
-	var v V
-	s := `{"values":["","SGD","USD","GBP","KRW","HKD","JPY","MYR","BHT","THC","CBD","XYZ"]}`
-	json.Unmarshal([]byte(s), &v)
-
-	if len(v.Values) != len(values) {
-		t.Errorf("cannot decode: %d", len(v.Values))
-	}
-	if !slices.Equal(v.Values, values) {
-		t.Errorf("wrong decoded: %v", v.Values)
-	}
-
-	b, err := json.Marshal(v)
-	if err != nil {
-		t.Fatalf("cannot encode: %s", err)
-	}
-	if string(b) != s {
-		t.Errorf("wrong encoded: %s != %s", string(b), s)
+		if d != v {
+			t.Errorf("exp(%v) != got(%v)", v, d)
+		}
 	}
 
 	t.Run("when unknown value, then error", func(t *testing.T) {
-		s := `{"values":["something"]}`
-		var v V
-		err := json.Unmarshal([]byte(s), &v)
+		s := `something`
+		var v CurrencyString
+		err := (&v).UnmarshalText([]byte(s))
 		if err == nil {
 			t.Errorf("must be error")
 		}
@@ -48,7 +37,7 @@ func TestJSON_CurrencyString(t *testing.T) {
 	})
 }
 
-func BenchmarkMarshalText_CurrencyString(b *testing.B) {
+func BenchmarkCurrencyString_MarshalText(b *testing.B) {
 	var v []byte
 	var err error
 	for i := 0; i < b.N; i++ {
@@ -63,7 +52,7 @@ func BenchmarkMarshalText_CurrencyString(b *testing.B) {
 	}
 }
 
-func BenchmarkUnmarshalText_CurrencyString(b *testing.B) {
+func BenchmarkCurrencyString_UnmarshalText(b *testing.B) {
 	var x CurrencyString
 	for i := 0; i < b.N; i++ {
 		for _, c := range []string{"", "SGD", "USD", "GBP", "KRW", "HKD", "JPY", "MYR", "BHT", "THC", "CBD", "XYZ"} {
@@ -71,28 +60,5 @@ func BenchmarkUnmarshalText_CurrencyString(b *testing.B) {
 				b.Fatal("cannot decode")
 			}
 		}
-	}
-}
-
-func TestCurrencyString_String(t *testing.T) {
-	values := []CurrencyString{UndefinedCurrencyS, SGDS, USDS, GBPS, KRWS, HKDS, JPYS, MYRS, BHTS, THCS, CBDS, XYZS}
-	tags := []string{"", "SGD", "USD", "GBP", "KRW", "HKD", "JPY", "MYR", "BHT", "THC", "CBD", "XYZ"}
-
-	for i := range values {
-		if values[i].String() != tags[i] {
-			t.Errorf("got(%s) != exp(%s)", values[i].String(), tags[i])
-		}
-	}
-}
-
-func BenchmarkCurrencyString_String(b *testing.B) {
-	var v string
-	for i := 0; i < b.N; i++ {
-		for _, c := range []CurrencyString{UndefinedCurrencyS, SGDS, USDS, GBPS, KRWS, HKDS, JPYS, MYRS, BHTS, THCS, CBDS, XYZS} {
-			v = c.String()
-		}
-	}
-	if len(v) > 1000 {
-		b.Fatal("noop")
 	}
 }
