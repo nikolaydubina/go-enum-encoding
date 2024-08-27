@@ -1,0 +1,4 @@
+func (s {{.Type}}) String() string {
+    b, _ := s.MarshalText()
+    return string(b)
+}

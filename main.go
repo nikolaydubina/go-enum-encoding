@@ -24,25 +24,33 @@ var templateShortCode string
 //go:embed enum_test.go.template
 var templateTest string
 
+//go:embed enum_string.go.template
+var templateString string
+
+//go:embed enum_string_test.go.template
+var templateStringTest string
+
 func main() {
 	var (
-		typeName    string
-		mode        string
-		fileName    = os.Getenv("GOFILE")
-		lineNum     = os.Getenv("GOLINE")
-		packageName = os.Getenv("GOPACKAGE")
+		typeName     string
+		mode         string
+		enableString bool
+		fileName     = os.Getenv("GOFILE")
+		lineNum      = os.Getenv("GOLINE")
+		packageName  = os.Getenv("GOPACKAGE")
 	)
 	flag.StringVar(&typeName, "type", "", "type to be generated for")
 	flag.StringVar(&mode, "mode", "auto", "what kind of strategy used (short, long, auto)")
+	flag.BoolVar(&enableString, "string", false, "generate String() method")
 	flag.Parse()
 
-	if err := process(typeName, fileName, lineNum, packageName, mode); err != nil {
+	if err := process(typeName, fileName, lineNum, packageName, mode, enableString); err != nil {
 		os.Stderr.WriteString(err.Error())
 		os.Exit(1)
 	}
 }
 
-func process(typeName, fileName, lineNum, packageName, mode string) error {
+func process(typeName, fileName, lineNum, packageName, mode string, enableString bool) error {
 	if typeName == "" || fileName == "" || packageName == "" {
 		return errors.New("type, file and package name must be provided")
 	}
@@ -124,10 +132,19 @@ func process(typeName, fileName, lineNum, packageName, mode string) error {
 		code = strings.ReplaceAll(code, "{{.json_to_value}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return `"` + v[1] + `": ` + v[0] + `,` }), "\n"))
 	}
 
+	if enableString {
+		code += "\n" + templateString
+	}
+
 	code = strings.ReplaceAll(code, "{{.Type}}", typeName)
 	code = strings.ReplaceAll(code, "{{.Package}}", packageName)
 
 	test := templateTest
+
+	if enableString {
+		test += "\n" + templateStringTest
+	}
+
 	test = strings.ReplaceAll(test, "{{.Type}}", typeName)
 	test = strings.ReplaceAll(test, "{{.Package}}", packageName)
 	test = strings.ReplaceAll(test, "{{.Values}}", strings.Join(mp(specs, func(_ int, v [2]string) string { return v[0] }), ", "))

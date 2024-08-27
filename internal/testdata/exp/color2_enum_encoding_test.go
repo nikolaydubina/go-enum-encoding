@@ -13,7 +13,7 @@ func TestJSON_Color2(t *testing.T) {
 		Values []Color2 `json:"values"`
 	}
 
-	values := []Color2{UndefinedColor, Red}
+	values := []Color2{UndefinedColor2, Red2}
 
 	var v V
 	s := `{"values":["","red"]}`
@@ -51,7 +51,7 @@ func BenchmarkMarshalText_Color2(b *testing.B) {
 	var v []byte
 	var err error
 	for i := 0; i < b.N; i++ {
-		for _, c := range []Color2{UndefinedColor, Red} {
+		for _, c := range []Color2{UndefinedColor2, Red2} {
 			if v, err = c.MarshalText(); err != nil {
 				b.Fatal("empty")
 			}

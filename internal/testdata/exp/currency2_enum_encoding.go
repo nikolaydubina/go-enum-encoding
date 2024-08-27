@@ -8,11 +8,11 @@ var ErrUnknownCurrency2 = errors.New("unknown Currency2")
 func (s *Currency2) UnmarshalText(text []byte) error {
 	switch string(text) {
 	case "":
-		*s = UndefCurrency
+		*s = UndefCurrency2
 	case "SGD":
-		*s = SGD
+		*s = SGD2
 	case "USD":
-		*s = USD
+		*s = USD2
 	default:
 		return ErrUnknownCurrency2
 	}
@@ -23,11 +23,11 @@ var json_bytes_Currency2 = [...][]byte{[]byte(""), []byte("SGD"), []byte("USD")}
 
 func (s Currency2) MarshalText() ([]byte, error) {
 	switch s {
-	case UndefCurrency:
+	case UndefCurrency2:
 		return json_bytes_Currency2[0], nil
-	case SGD:
+	case SGD2:
 		return json_bytes_Currency2[1], nil
-	case USD:
+	case USD2:
 		return json_bytes_Currency2[2], nil
 	default:
 		return nil, ErrUnknownCurrency2
