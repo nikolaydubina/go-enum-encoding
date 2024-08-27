@@ -22,18 +22,18 @@ func (s *Color) UnmarshalText(text []byte) error {
 	return nil
 }
 
-var json_bytes_Color = [...][]byte{[]byte(""), []byte("red"), []byte("green"), []byte("blue")}
+var seq_bytes_Color = [...][]byte{[]byte(""), []byte("red"), []byte("green"), []byte("blue")}
 
 func (s Color) MarshalText() ([]byte, error) {
 	switch s {
 	case UndefinedColor:
-		return json_bytes_Color[0], nil
+		return seq_bytes_Color[0], nil
 	case Red:
-		return json_bytes_Color[1], nil
+		return seq_bytes_Color[1], nil
 	case Green:
-		return json_bytes_Color[2], nil
+		return seq_bytes_Color[2], nil
 	case Blue:
-		return json_bytes_Color[3], nil
+		return seq_bytes_Color[3], nil
 	default:
 		return nil, ErrUnknownColor
 	}

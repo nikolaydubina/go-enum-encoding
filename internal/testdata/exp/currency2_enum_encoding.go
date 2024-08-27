@@ -20,16 +20,16 @@ func (s *Currency2) UnmarshalText(text []byte) error {
 	return nil
 }
 
-var json_bytes_Currency2 = [...][]byte{[]byte(""), []byte("SGD"), []byte("USD")}
+var seq_bytes_Currency2 = [...][]byte{[]byte(""), []byte("SGD"), []byte("USD")}
 
 func (s Currency2) MarshalText() ([]byte, error) {
 	switch s {
 	case UndefCurrency2:
-		return json_bytes_Currency2[0], nil
+		return seq_bytes_Currency2[0], nil
 	case SGD2:
-		return json_bytes_Currency2[1], nil
+		return seq_bytes_Currency2[1], nil
 	case USD2:
-		return json_bytes_Currency2[2], nil
+		return seq_bytes_Currency2[2], nil
 	default:
 		return nil, ErrUnknownCurrency2
 	}
