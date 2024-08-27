@@ -9,15 +9,15 @@ import (
 	"testing"
 )
 
-func TestJSON_Currency2(t *testing.T) {
+func TestColorString_JSON(t *testing.T) {
 	type V struct {
-		Values []Currency2 `json:"values"`
+		Values []ColorString `json:"values"`
 	}
 
-	values := []Currency2{UndefCurrency2, SGD2, USD2}
+	values := []ColorString{RedS, GreenS, BlueS}
 
 	var v V
-	s := `{"values":["","SGD","USD"]}`
+	s := `{"values":["red","green","blue"]}`
 	json.Unmarshal([]byte(s), &v)
 
 	if len(v.Values) != len(values) {
@@ -42,34 +42,8 @@ func TestJSON_Currency2(t *testing.T) {
 		if err == nil {
 			t.Errorf("must be error")
 		}
-		if !errors.Is(err, ErrUnknownCurrency2) {
+		if !errors.Is(err, ErrUnknownColorString) {
 			t.Errorf("wrong error: %s", err)
 		}
 	})
-}
-
-func BenchmarkMarshalText_Currency2(b *testing.B) {
-	var v []byte
-	var err error
-	for i := 0; i < b.N; i++ {
-		for _, c := range []Currency2{UndefCurrency2, SGD2, USD2} {
-			if v, err = c.MarshalText(); err != nil {
-				b.Fatal("empty")
-			}
-		}
-	}
-	if len(v) > 1000 {
-		b.Fatal("noop")
-	}
-}
-
-func BenchmarkUnmarshalText_Currency2(b *testing.B) {
-	var x Currency2
-	for i := 0; i < b.N; i++ {
-		for _, c := range []string{"", "SGD", "USD"} {
-			if err := x.UnmarshalText([]byte(c)); err != nil {
-				b.Fatal("cannot decode")
-			}
-		}
-	}
 }

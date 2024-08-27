@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestJSON_Currency(t *testing.T) {
+func TestCurrency_JSON(t *testing.T) {
 	type V struct {
 		Values []Currency `json:"values"`
 	}
@@ -46,30 +46,4 @@ func TestJSON_Currency(t *testing.T) {
 			t.Errorf("wrong error: %s", err)
 		}
 	})
-}
-
-func BenchmarkMarshalText_Currency(b *testing.B) {
-	var v []byte
-	var err error
-	for i := 0; i < b.N; i++ {
-		for _, c := range []Currency{UndefinedCurrency, SGD, USD, GBP, KRW, HKD, JPY, MYR, BHT, THC, CBD, XYZ} {
-			if v, err = c.MarshalText(); err != nil {
-				b.Fatal("empty")
-			}
-		}
-	}
-	if len(v) > 1000 {
-		b.Fatal("noop")
-	}
-}
-
-func BenchmarkUnmarshalText_Currency(b *testing.B) {
-	var x Currency
-	for i := 0; i < b.N; i++ {
-		for _, c := range []string{"", "SGD", "USD", "GBP", "KRW", "HKD", "JPY", "MYR", "BHT", "THC", "CBD", "XYZ"} {
-			if err := x.UnmarshalText([]byte(c)); err != nil {
-				b.Fatal("cannot decode")
-			}
-		}
-	}
 }

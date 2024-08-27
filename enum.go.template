@@ -7,14 +7,14 @@ import "errors"
 var ErrUnknown{{.Type}} = errors.New("unknown {{.Type}}")
 
 var value_to_bytes_{{.Type}} = map[{{.Type}}][]byte{
-    {{.value_to_bytes}}
+    {{.value_to_bytes_map}}
 }
 
 var string_to_value_{{.Type}} = map[string]{{.Type}}{
-    {{.string_to_value}}
+    {{.string_to_value_map}}
 }
 
-func (s *{{.Type}}) UnmarshalText(text []byte) error {
+func (s *{{.Type}}) {{.DecodeMethod}}(text []byte) error {
 	var ok bool
 	if *s, ok = string_to_value_{{.Type}}[string(text)]; !ok {
 		return ErrUnknown{{.Type}}
@@ -22,4 +22,4 @@ func (s *{{.Type}}) UnmarshalText(text []byte) error {
 	return nil
 }
 
-func (s {{.Type}}) MarshalText() ([]byte, error) { return value_to_bytes_{{.Type}}[s], nil }
+func (s {{.Type}}) {{.EncodeMethod}}() ([]byte, error) { return value_to_bytes_{{.Type}}[s], nil }

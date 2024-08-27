@@ -6,9 +6,9 @@ import "errors"
 
 var ErrUnknown{{.Type}} = errors.New("unknown {{.Type}}")
 
-func (s *{{.Type}}) UnmarshalText(text []byte) error {
+func (s *{{.Type}}) {{.DecodeMethod}}(text []byte) error {
 	switch string(text) {
-    {{.string_to_value}}
+    {{.string_to_value_switch}}
 	default:
 		return ErrUnknown{{.Type}}
 	}
@@ -17,9 +17,9 @@ func (s *{{.Type}}) UnmarshalText(text []byte) error {
 
 var seq_bytes_{{.Type}} = [...][]byte{{{.seq_bytes}}}
 
-func (s {{.Type}}) MarshalText() ([]byte, error) {
+func (s {{.Type}}) {{.EncodeMethod}}() ([]byte, error) {
 	switch s {
-    {{.value_to_bytes}}
+    {{.value_to_bytes_switch}}
 	default:
 		return nil,  ErrUnknown{{.Type}}
 	}

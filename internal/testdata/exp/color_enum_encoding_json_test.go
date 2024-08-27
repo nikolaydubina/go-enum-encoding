@@ -9,15 +9,15 @@ import (
 	"testing"
 )
 
-func TestJSON_Color2(t *testing.T) {
+func TestColor_JSON(t *testing.T) {
 	type V struct {
-		Values []Color2 `json:"values"`
+		Values []Color `json:"values"`
 	}
 
-	values := []Color2{UndefinedColor2, Red2}
+	values := []Color{UndefinedColor, Red, Green, Blue}
 
 	var v V
-	s := `{"values":["","red"]}`
+	s := `{"values":["","red","green","blue"]}`
 	json.Unmarshal([]byte(s), &v)
 
 	if len(v.Values) != len(values) {
@@ -42,34 +42,8 @@ func TestJSON_Color2(t *testing.T) {
 		if err == nil {
 			t.Errorf("must be error")
 		}
-		if !errors.Is(err, ErrUnknownColor2) {
+		if !errors.Is(err, ErrUnknownColor) {
 			t.Errorf("wrong error: %s", err)
 		}
 	})
-}
-
-func BenchmarkMarshalText_Color2(b *testing.B) {
-	var v []byte
-	var err error
-	for i := 0; i < b.N; i++ {
-		for _, c := range []Color2{UndefinedColor2, Red2} {
-			if v, err = c.MarshalText(); err != nil {
-				b.Fatal("empty")
-			}
-		}
-	}
-	if len(v) > 1000 {
-		b.Fatal("noop")
-	}
-}
-
-func BenchmarkUnmarshalText_Color2(b *testing.B) {
-	var x Color2
-	for i := 0; i < b.N; i++ {
-		for _, c := range []string{"", "red"} {
-			if err := x.UnmarshalText([]byte(c)); err != nil {
-				b.Fatal("cannot decode")
-			}
-		}
-	}
 }

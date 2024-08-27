@@ -3,42 +3,31 @@
 package {{.Package}}
 
 import (
-	"encoding/json"
-	"slices"
 	"testing"
 	"errors"
 )
 
-func TestJSON_{{.Type}}(t *testing.T) {
-	type V struct {
-		Values []{{.Type}} `json:"values"`
-	}
+func Test{{.Type}}_{{.EncodeMethod}}_{{.DecodeMethod}}(t *testing.T) {
+	for _, v := range []{{.Type}}{{{.Values}}} {
+		b, err := v.{{.EncodeMethod}}()
+		if err != nil {
+			t.Errorf("cannot encode: %s", err)
+		}
 
-	values := []{{.Type}}{{{.Values}}}
+		var d {{.Type}}
+		if err := (&d).{{.DecodeMethod}}(b); err != nil {
+			t.Errorf("cannot decode: %s", err)
+		}
 
-	var v V
-	s := `{"values":[{{.Tags}}]}`
-	json.Unmarshal([]byte(s), &v)
-
-	if len(v.Values) != len(values) {
-		t.Errorf("cannot decode: %d", len(v.Values))
-	}
-	if !slices.Equal(v.Values, values) {
-		t.Errorf("wrong decoded: %v", v.Values)
-	}
-
-	b, err := json.Marshal(v)
-	if err != nil {
-		t.Fatalf("cannot encode: %s", err)
-	}
-	if string(b) != s {
-		t.Errorf("wrong encoded: %s != %s", string(b), s)
+		if d != v {
+			t.Errorf("exp(%v) != got(%v)", v, d)
+		}
 	}
 
 	t.Run("when unknown value, then error", func(t *testing.T) {
-		s := `{"values":["something"]}`
-		var v V
-		err := json.Unmarshal([]byte(s), &v)
+		s := `something`
+		var v {{.Type}}
+		err := (&v).{{.DecodeMethod}}([]byte(s))
 		if err == nil {
 			t.Errorf("must be error")
 		}
@@ -48,12 +37,12 @@ func TestJSON_{{.Type}}(t *testing.T) {
 	})
 }
 
-func BenchmarkMarshalText_{{.Type}}(b *testing.B) {
+func Benchmark{{.Type}}_{{.EncodeMethod}}(b *testing.B) {
 	var v []byte
 	var err error
 	for i := 0; i < b.N; i++ {
 		for _, c := range []{{.Type}}{{{.Values}}} {
-			if v, err = c.MarshalText(); err != nil {
+			if v, err = c.{{.EncodeMethod}}(); err != nil {
 				b.Fatal("empty")
 			}
 		}
@@ -63,11 +52,11 @@ func BenchmarkMarshalText_{{.Type}}(b *testing.B) {
 	}
 }
 
-func BenchmarkUnmarshalText_{{.Type}}(b *testing.B) {
+func Benchmark{{.Type}}_{{.DecodeMethod}}(b *testing.B) {
 	var x {{.Type}}
 	for i := 0; i < b.N; i++ {
 		for _, c := range []string{{{.Tags}}} {
-			if err := x.UnmarshalText([]byte(c)); err != nil {
+			if err := x.{{.DecodeMethod}}([]byte(c)); err != nil {
 				b.Fatal("cannot decode")
 			}
 		}
