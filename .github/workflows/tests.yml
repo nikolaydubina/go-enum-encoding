@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-    
+
       - name: Set up Go 1.x
         uses: actions/setup-go@v5
         with:
@@ -27,7 +27,8 @@ jobs:
         run: |
           go get -v -t -d ./...
           go install github.com/jstemmer/go-junit-report/v2@latest
-          go test -coverprofile=coverage.out -covermode=atomic -cover -json -v ./... 2>&1 | go-junit-report -set-exit-code > tests.xml
+          go generate ./...
+          go test -coverprofile=coverage.out -covermode=atomic -cover -json -v ./... ./internal/testdata/exp ./internal/testdata 2>&1 | go-junit-report -set-exit-code > tests.xml
 
       - name: Fuzz
         run: go test -fuzz=FuzzBadFile -fuzztime=5s
@@ -43,4 +44,3 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.out
-

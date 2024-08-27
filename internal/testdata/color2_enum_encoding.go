@@ -8,35 +8,23 @@ var ErrUnknownColor2 = errors.New("unknown Color2")
 func (s *Color2) UnmarshalText(text []byte) error {
 	switch string(text) {
 	case "":
-		*s = UndefinedColor
+		*s = UndefinedColor2
 	case "red":
-		*s = Red
-	case "":
-		*s = UndefCurrency
-	case "SGD":
-		*s = SGD
-	case "USD":
-		*s = USD
+		*s = Red2
 	default:
 		return ErrUnknownColor2
 	}
 	return nil
 }
 
-var json_bytes_Color2 = [...][]byte{[]byte(""), []byte("red"), []byte(""), []byte("SGD"), []byte("USD")}
+var json_bytes_Color2 = [...][]byte{[]byte(""), []byte("red")}
 
 func (s Color2) MarshalText() ([]byte, error) {
 	switch s {
-	case UndefinedColor:
+	case UndefinedColor2:
 		return json_bytes_Color2[0], nil
-	case Red:
+	case Red2:
 		return json_bytes_Color2[1], nil
-	case UndefCurrency:
-		return json_bytes_Color2[2], nil
-	case SGD:
-		return json_bytes_Color2[3], nil
-	case USD:
-		return json_bytes_Color2[4], nil
 	default:
 		return nil, ErrUnknownColor2
 	}

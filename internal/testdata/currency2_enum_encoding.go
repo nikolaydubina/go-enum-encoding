@@ -8,35 +8,27 @@ var ErrUnknownCurrency2 = errors.New("unknown Currency2")
 func (s *Currency2) UnmarshalText(text []byte) error {
 	switch string(text) {
 	case "":
-		*s = UndefinedColor
-	case "red":
-		*s = Red
-	case "":
-		*s = UndefCurrency
+		*s = UndefCurrency2
 	case "SGD":
-		*s = SGD
+		*s = SGD2
 	case "USD":
-		*s = USD
+		*s = USD2
 	default:
 		return ErrUnknownCurrency2
 	}
 	return nil
 }
 
-var json_bytes_Currency2 = [...][]byte{[]byte(""), []byte("red"), []byte(""), []byte("SGD"), []byte("USD")}
+var json_bytes_Currency2 = [...][]byte{[]byte(""), []byte("SGD"), []byte("USD")}
 
 func (s Currency2) MarshalText() ([]byte, error) {
 	switch s {
-	case UndefinedColor:
+	case UndefCurrency2:
 		return json_bytes_Currency2[0], nil
-	case Red:
+	case SGD2:
 		return json_bytes_Currency2[1], nil
-	case UndefCurrency:
+	case USD2:
 		return json_bytes_Currency2[2], nil
-	case SGD:
-		return json_bytes_Currency2[3], nil
-	case USD:
-		return json_bytes_Currency2[4], nil
 	default:
 		return nil, ErrUnknownCurrency2
 	}

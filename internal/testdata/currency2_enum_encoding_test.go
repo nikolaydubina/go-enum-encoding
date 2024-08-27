@@ -13,10 +13,10 @@ func TestJSON_Currency2(t *testing.T) {
 		Values []Currency2 `json:"values"`
 	}
 
-	values := []Currency2{UndefinedColor, Red, UndefCurrency, SGD, USD}
+	values := []Currency2{UndefCurrency2, SGD2, USD2}
 
 	var v V
-	s := `{"values":["","red","","SGD","USD"]}`
+	s := `{"values":["","SGD","USD"]}`
 	json.Unmarshal([]byte(s), &v)
 
 	if len(v.Values) != len(values) {
@@ -51,7 +51,7 @@ func BenchmarkMarshalText_Currency2(b *testing.B) {
 	var v []byte
 	var err error
 	for i := 0; i < b.N; i++ {
-		for _, c := range []Currency2{UndefinedColor, Red, UndefCurrency, SGD, USD} {
+		for _, c := range []Currency2{UndefCurrency2, SGD2, USD2} {
 			if v, err = c.MarshalText(); err != nil {
 				b.Fatal("empty")
 			}
@@ -65,7 +65,7 @@ func BenchmarkMarshalText_Currency2(b *testing.B) {
 func BenchmarkUnmarshalText_Currency2(b *testing.B) {
 	var x Currency2
 	for i := 0; i < b.N; i++ {
-		for _, c := range []string{"", "red", "", "SGD", "USD"} {
+		for _, c := range []string{"", "SGD", "USD"} {
 			if err := x.UnmarshalText([]byte(c)); err != nil {
 				b.Fatal("cannot decode")
 			}

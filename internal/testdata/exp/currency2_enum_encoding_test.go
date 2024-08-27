@@ -13,7 +13,7 @@ func TestJSON_Currency2(t *testing.T) {
 		Values []Currency2 `json:"values"`
 	}
 
-	values := []Currency2{UndefCurrency, SGD, USD}
+	values := []Currency2{UndefCurrency2, SGD2, USD2}
 
 	var v V
 	s := `{"values":["","SGD","USD"]}`
@@ -51,7 +51,7 @@ func BenchmarkMarshalText_Currency2(b *testing.B) {
 	var v []byte
 	var err error
 	for i := 0; i < b.N; i++ {
-		for _, c := range []Currency2{UndefCurrency, SGD, USD} {
+		for _, c := range []Currency2{UndefCurrency2, SGD2, USD2} {
 			if v, err = c.MarshalText(); err != nil {
 				b.Fatal("empty")
 			}

@@ -1,0 +1,10 @@
+func Test{{.Type}}_String(t *testing.T) {
+	values := []{{.Type}}{{{.Values}}}
+	tags := []string{{{.Tags}}} 
+
+	for i := range values {
+		if values[i].String() != tags[i] {
+			t.Errorf("got(%s) != exp(%s)", values[i].String() , tags[i]) 
+		}	
+	}
+}
