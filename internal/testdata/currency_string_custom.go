@@ -2,7 +2,6 @@ package color
 
 type CurrencyStringCustom struct{ c uint8 }
 
-//go:generate go-enum-encoding -type=CurrencyStringCustom -string -encode-method=MarshalTextName -decode-method=UnmarshalTextName -string-method=StringName
 var (
 	UndefinedCurrencySC = CurrencyStringCustom{}   // json:""
 	SGDSC               = CurrencyStringCustom{1}  // json:"SGD"

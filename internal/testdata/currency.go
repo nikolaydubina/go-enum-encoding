@@ -2,7 +2,6 @@ package color
 
 type Currency struct{ c uint8 }
 
-//go:generate go-enum-encoding -type=Currency
 var (
 	UndefinedCurrency = Currency{}   // json:""
 	SGD               = Currency{1}  // json:"SGD"

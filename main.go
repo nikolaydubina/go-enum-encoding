@@ -160,6 +160,7 @@ func process(typeName, fileName, lineNum, packageName, mode, encodeMethod, decod
 		With("{{.StringMethod}}", stringMethod).
 		WithMap("{{.Values}}", func(_ int, v [2]string) string { return v[0] }, ", ").
 		WithMap("{{.Tags}}", func(_ int, v [2]string) string { return `"` + v[1] + `"` }, ",").
+		WithMap("{{.TagsNaked}}", func(_ int, v [2]string) string { return v[1] }, " ").
 		WithMap("{{.seq_bytes}}", func(_ int, v [2]string) string { return `[]byte("` + v[1] + `")` }, ", ").
 		WithMap("{{.seq_string}}", func(_ int, v [2]string) string { return `"` + v[1] + `"` }, ", ")
 

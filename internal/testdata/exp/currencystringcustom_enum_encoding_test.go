@@ -4,8 +4,26 @@ package color
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 )
+
+func ExampleCurrencyStringCustom_MarshalTextName() {
+	for _, v := range []CurrencyStringCustom{UndefinedCurrencySC, SGDSC, USDSC, GBPSC, KRWSC, HKDSC, JPYSC, MYRSC, BHTSC, THCSC, CBDSC, XYZSC} {
+		b, _ := v.MarshalTextName()
+		fmt.Printf("%s ", string(b))
+	}
+	// Output:  SGD USD GBP KRW HKD JPY MYR BHT THC CBD XYZ
+}
+
+func ExampleCurrencyStringCustom_UnmarshalTextName() {
+	for _, s := range []string{"", "SGD", "USD", "GBP", "KRW", "HKD", "JPY", "MYR", "BHT", "THC", "CBD", "XYZ"} {
+		var v CurrencyStringCustom
+		if err := (&v).UnmarshalTextName([]byte(s)); err != nil {
+			fmt.Println(err)
+		}
+	}
+}
 
 func TestCurrencyStringCustom_MarshalTextName_UnmarshalTextName(t *testing.T) {
 	for _, v := range []CurrencyStringCustom{UndefinedCurrencySC, SGDSC, USDSC, GBPSC, KRWSC, HKDSC, JPYSC, MYRSC, BHTSC, THCSC, CBDSC, XYZSC} {
