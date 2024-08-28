@@ -27,7 +27,7 @@ jobs:
         run: |
           go get -v -t -d ./...
           go install github.com/jstemmer/go-junit-report/v2@latest
-          go test -coverprofile=coverage.out -covermode=atomic -cover -json -v ./... ./internal/testdata/exp ./internal/testdata 2>&1 | go-junit-report -set-exit-code > tests.xml
+          go test -coverprofile=coverage.out -covermode=atomic -cover -json -v ./... ./internal/exp ./internal 2>&1 | go-junit-report -set-exit-code > tests.xml
 
       - name: Fuzz
         run: go test -fuzz=FuzzBadFile -fuzztime=5s
