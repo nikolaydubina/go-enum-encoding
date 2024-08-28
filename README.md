@@ -73,6 +73,24 @@ UnmarshalText_Color-16    0.00          0.00              0.00               0.0
 
 </details>
 
+<details><summary>Appendix: Stringer</summary>
+
+`String() string` method is very similar to encoding, howver it does not return error and returns `string` instead of `[]byte`.
+To avoid malloc and convenience, stringer option is added to generate it accompanied with tests and benchmarks.
+First used in [tailscale](https://github.com/tailscale/tailscale/pull/13270).
+
+</details>
+
+</details>
+
+<details><summary>Appendix: Custom Methods</summary>
+
+Some enums are encoded directly as underlying basic type, however they have dual custom use through `String() string` methods and alike.
+To assist safe migration, custom encode and decode method names are added.
+First used in [tailscale](https://github.com/tailscale/tailscale/pull/13270).
+
+</details>
+
 [^1]: Comparison to other enums methods: http://github.com/nikolaydubina/go-enum-example
 [^2]: iso4217 enums performance loop vs map: https://github.com/ferdypruis/iso4217/issues/4
 [^3]: fpmoney: https://github.com/nikolaydubina/fpmoney?tab=readme-ov-file#appendix-a-jsonunmarshal-optimizations
