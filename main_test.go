@@ -34,12 +34,12 @@ func TestMain(t *testing.T) {
 
 	assertFile := func(t *testing.T, a string) {
 		t.Helper()
-		assertEqFile(t, filepath.Join(outdir, a), filepath.Join("internal", "testdata", "exp", a))
+		assertEqFile(t, filepath.Join(outdir, a), filepath.Join("internal", "exp", a))
 	}
 
 	t.Run("when ok, then file matches expected", func(t *testing.T) {
 		t.Run("when short mode, then file matches expected", func(t *testing.T) {
-			exec.Command("cp", filepath.Join("internal", "testdata", "color.go"), filepath.Join(outdir, "color.go")).Run()
+			exec.Command("cp", filepath.Join("internal", "color.go"), filepath.Join(outdir, "color.go")).Run()
 
 			cmd := exec.Command(testbin, "--type", "Color")
 			cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(outdir, "color.go"), "GOLINE=4", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
@@ -51,7 +51,7 @@ func TestMain(t *testing.T) {
 		})
 
 		t.Run("when auto mode, then long can be detected and file matches expected", func(t *testing.T) {
-			exec.Command("cp", filepath.Join("internal", "testdata", "currency.go"), filepath.Join(outdir, "currency.go")).Run()
+			exec.Command("cp", filepath.Join("internal", "currency.go"), filepath.Join(outdir, "currency.go")).Run()
 
 			cmd := exec.Command(testbin, "--type", "Currency")
 			cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(outdir, "currency.go"), "GOLINE=4", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
@@ -64,7 +64,7 @@ func TestMain(t *testing.T) {
 
 		t.Run("string", func(t *testing.T) {
 			t.Run("short", func(t *testing.T) {
-				exec.Command("cp", filepath.Join("internal", "testdata", "color.go"), filepath.Join(outdir, "color.go")).Run()
+				exec.Command("cp", filepath.Join("internal", "color.go"), filepath.Join(outdir, "color.go")).Run()
 
 				cmd := exec.Command(testbin, "--type", "ColorString", "--string")
 				cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(outdir, "color.go"), "GOLINE=18", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
@@ -77,7 +77,7 @@ func TestMain(t *testing.T) {
 			})
 
 			t.Run("long", func(t *testing.T) {
-				exec.Command("cp", filepath.Join("internal", "testdata", "currency_string.go"), filepath.Join(outdir, "currency_string.go")).Run()
+				exec.Command("cp", filepath.Join("internal", "currency_string.go"), filepath.Join(outdir, "currency_string.go")).Run()
 
 				cmd := exec.Command(testbin, "--type", "CurrencyString", "--mode", "long", "--string")
 				cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(outdir, "currency_string.go"), "GOLINE=4", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
@@ -90,7 +90,7 @@ func TestMain(t *testing.T) {
 			})
 
 			t.Run("custom method", func(t *testing.T) {
-				exec.Command("cp", filepath.Join("internal", "testdata", "currency_string_custom.go"), filepath.Join(outdir, "currency_string_custom.go")).Run()
+				exec.Command("cp", filepath.Join("internal", "currency_string_custom.go"), filepath.Join(outdir, "currency_string_custom.go")).Run()
 
 				cmd := exec.Command(
 					testbin,
@@ -110,7 +110,7 @@ func TestMain(t *testing.T) {
 		})
 
 		t.Run("when multiple enums in same file, then file matches expected for each", func(t *testing.T) {
-			exec.Command("cp", filepath.Join("internal", "testdata", "multiple.go"), filepath.Join(outdir, "multiple.go")).Run()
+			exec.Command("cp", filepath.Join("internal", "multiple.go"), filepath.Join(outdir, "multiple.go")).Run()
 
 			cmd := exec.Command(testbin, "--type", "Color2")
 			cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(outdir, "multiple.go"), "GOLINE=4", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
@@ -133,7 +133,7 @@ func TestMain(t *testing.T) {
 	})
 
 	t.Run("when bad go file, then error", func(t *testing.T) {
-		exec.Command("cp", filepath.Join("internal", "testdata", "README.md"), filepath.Join(outdir, "README.md")).Run()
+		exec.Command("cp", filepath.Join("internal", "README.md"), filepath.Join(outdir, "README.md")).Run()
 
 		cmd := exec.Command(testbin, "--type", "Color")
 		cmd.Env = append(cmd.Environ(), "GOFILE=README.md", "GOLINE=5", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
