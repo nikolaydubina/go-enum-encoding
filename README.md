@@ -11,7 +11,7 @@ go install github.com/nikolaydubina/go-enum-encoding@latest
 ```
 
 > [!WARNING]
-> `v1.8.2` is last version that supports go1.23 or bellow
+> `v1.8.2` is the last version that supports go1.23 or bellow
 
 * 200 LOC
 * simple, fast[^1], strict[^1]
