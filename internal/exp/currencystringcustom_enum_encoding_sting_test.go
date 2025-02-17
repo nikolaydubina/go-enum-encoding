@@ -18,13 +18,9 @@ func TestCurrencyStringCustom_StringName(t *testing.T) {
 }
 
 func BenchmarkCurrencyStringCustom_StringName(b *testing.B) {
-	var v string
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, c := range []CurrencyStringCustom{UndefinedCurrencySC, SGDSC, USDSC, GBPSC, KRWSC, HKDSC, JPYSC, MYRSC, BHTSC, THCSC, CBDSC, XYZSC} {
-			v = c.StringName()
+			c.StringName()
 		}
-	}
-	if len(v) > 1000 {
-		b.Fatal("noop")
 	}
 }

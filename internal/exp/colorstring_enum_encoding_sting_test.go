@@ -18,13 +18,9 @@ func TestColorString_String(t *testing.T) {
 }
 
 func BenchmarkColorString_String(b *testing.B) {
-	var v string
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, c := range []ColorString{RedS, GreenS, BlueS} {
-			v = c.String()
+			c.String()
 		}
-	}
-	if len(v) > 1000 {
-		b.Fatal("noop")
 	}
 }

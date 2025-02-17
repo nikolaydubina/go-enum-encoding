@@ -56,23 +56,18 @@ func TestCurrencyString_MarshalText_UnmarshalText(t *testing.T) {
 }
 
 func BenchmarkCurrencyString_MarshalText(b *testing.B) {
-	var v []byte
-	var err error
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, c := range []CurrencyString{UndefinedCurrencyS, SGDS, USDS, GBPS, KRWS, HKDS, JPYS, MYRS, BHTS, THCS, CBDS, XYZS} {
-			if v, err = c.MarshalText(); err != nil {
+			if _, err := c.MarshalText(); err != nil {
 				b.Fatal("empty")
 			}
 		}
-	}
-	if len(v) > 1000 {
-		b.Fatal("noop")
 	}
 }
 
 func BenchmarkCurrencyString_UnmarshalText(b *testing.B) {
 	var x CurrencyString
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, c := range []string{"", "SGD", "USD", "GBP", "KRW", "HKD", "JPY", "MYR", "BHT", "THC", "CBD", "XYZ"} {
 			if err := x.UnmarshalText([]byte(c)); err != nil {
 				b.Fatal("cannot decode")

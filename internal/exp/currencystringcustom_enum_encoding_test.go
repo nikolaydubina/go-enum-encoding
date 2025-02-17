@@ -56,23 +56,18 @@ func TestCurrencyStringCustom_MarshalTextName_UnmarshalTextName(t *testing.T) {
 }
 
 func BenchmarkCurrencyStringCustom_MarshalTextName(b *testing.B) {
-	var v []byte
-	var err error
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, c := range []CurrencyStringCustom{UndefinedCurrencySC, SGDSC, USDSC, GBPSC, KRWSC, HKDSC, JPYSC, MYRSC, BHTSC, THCSC, CBDSC, XYZSC} {
-			if v, err = c.MarshalTextName(); err != nil {
+			if _, err := c.MarshalTextName(); err != nil {
 				b.Fatal("empty")
 			}
 		}
-	}
-	if len(v) > 1000 {
-		b.Fatal("noop")
 	}
 }
 
 func BenchmarkCurrencyStringCustom_UnmarshalTextName(b *testing.B) {
 	var x CurrencyStringCustom
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, c := range []string{"", "SGD", "USD", "GBP", "KRW", "HKD", "JPY", "MYR", "BHT", "THC", "CBD", "XYZ"} {
 			if err := x.UnmarshalTextName([]byte(c)); err != nil {
 				b.Fatal("cannot decode")

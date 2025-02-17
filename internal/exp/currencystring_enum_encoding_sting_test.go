@@ -18,13 +18,9 @@ func TestCurrencyString_String(t *testing.T) {
 }
 
 func BenchmarkCurrencyString_String(b *testing.B) {
-	var v string
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, c := range []CurrencyString{UndefinedCurrencyS, SGDS, USDS, GBPS, KRWS, HKDS, JPYS, MYRS, BHTS, THCS, CBDS, XYZS} {
-			v = c.String()
+			c.String()
 		}
-	}
-	if len(v) > 1000 {
-		b.Fatal("noop")
 	}
 }
