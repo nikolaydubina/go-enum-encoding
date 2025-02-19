@@ -18,13 +18,9 @@ func Test{{.Type}}_{{.StringMethod}}(t *testing.T) {
 }
 
 func Benchmark{{.Type}}_{{.StringMethod}}(b *testing.B) {
-	var v string
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, c := range []{{.Type}}{{{.Values}}} {
-			v = c.{{.StringMethod}}()
+			c.{{.StringMethod}}()
 		}
-	}
-	if len(v) > 1000 {
-		b.Fatal("noop")
 	}
 }

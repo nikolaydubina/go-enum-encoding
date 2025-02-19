@@ -56,23 +56,18 @@ func Test{{.Type}}_{{.EncodeMethod}}_{{.DecodeMethod}}(t *testing.T) {
 }
 
 func Benchmark{{.Type}}_{{.EncodeMethod}}(b *testing.B) {
-	var v []byte
-	var err error
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, c := range []{{.Type}}{{{.Values}}} {
-			if v, err = c.{{.EncodeMethod}}(); err != nil {
+			if _, err := c.{{.EncodeMethod}}(); err != nil {
 				b.Fatal("empty")
 			}
 		}
-	}
-	if len(v) > 1000 {
-		b.Fatal("noop")
 	}
 }
 
 func Benchmark{{.Type}}_{{.DecodeMethod}}(b *testing.B) {
 	var x {{.Type}}
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, c := range []string{{{.Tags}}} {
 			if err := x.{{.DecodeMethod}}([]byte(c)); err != nil {
 				b.Fatal("cannot decode")

@@ -56,23 +56,18 @@ func TestColor_MarshalText_UnmarshalText(t *testing.T) {
 }
 
 func BenchmarkColor_MarshalText(b *testing.B) {
-	var v []byte
-	var err error
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, c := range []Color{UndefinedColor, Red, Green, Blue} {
-			if v, err = c.MarshalText(); err != nil {
+			if _, err := c.MarshalText(); err != nil {
 				b.Fatal("empty")
 			}
 		}
-	}
-	if len(v) > 1000 {
-		b.Fatal("noop")
 	}
 }
 
 func BenchmarkColor_UnmarshalText(b *testing.B) {
 	var x Color
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, c := range []string{"", "red", "green", "blue"} {
 			if err := x.UnmarshalText([]byte(c)); err != nil {
 				b.Fatal("cannot decode")
