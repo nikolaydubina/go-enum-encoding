@@ -10,9 +10,6 @@
 go install github.com/nikolaydubina/go-enum-encoding@latest
 ```
 
-> [!WARNING]
-> `v1.8.2` is the last version that supports go1.23 or bellow
-
 * 200 LOC
 * simple, fast, strict
 * generates encoding/decoding, tests, benchmarks
