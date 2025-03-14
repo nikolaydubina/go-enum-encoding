@@ -24,7 +24,7 @@ jobs:
       - name: test
         env:
           GOCOVERPROFILE: coverage.out
-        run: go test -json -v ./...
+        run: go test ./...
 
       - name: fuzz
         run: go test -fuzz=FuzzBadFile -fuzztime=5s
