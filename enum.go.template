@@ -6,20 +6,21 @@ import "errors"
 
 var ErrUnknown{{.Type}} = errors.New("unknown {{.Type}}")
 
-var value_to_bytes_{{.Type}} = map[{{.Type}}][]byte{
-    {{.value_to_bytes_map}}
-}
-
-var string_to_value_{{.Type}} = map[string]{{.Type}}{
-    {{.string_to_value_map}}
-}
-
-func (s *{{.Type}}) {{.DecodeMethod}}(text []byte) error {
-	var ok bool
-	if *s, ok = string_to_value_{{.Type}}[string(text)]; !ok {
+func (s *{{.Type}}) UnmarshalText(text []byte) error {
+	switch string(text) {
+    {{.string_to_value_switch}}
+	default:
 		return ErrUnknown{{.Type}}
 	}
 	return nil
 }
 
-func (s {{.Type}}) {{.EncodeMethod}}() ([]byte, error) { return value_to_bytes_{{.Type}}[s], nil }
+var seq_bytes_{{.Type}} = [...][]byte{{{.seq_bytes}}}
+
+func (s {{.Type}}) MarshalText() ([]byte, error) {
+	switch s {
+    {{.value_to_bytes_switch}}
+	default:
+		return nil,  ErrUnknown{{.Type}}
+	}
+}
