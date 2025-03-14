@@ -10,31 +10,31 @@ import (
 	"testing"
 )
 
-func ExampleSize_MarshalText() {
-	for _, v := range []Size{UndefinedSize, Small, Large, XLarge} {
+func ExampleImageSize_MarshalText() {
+	for _, v := range []ImageSize{UndefinedSize, Small, Large, XLarge} {
 		b, _ := v.MarshalText()
 		fmt.Printf("%s ", string(b))
 	}
 	// Output:  small large xlarge
 }
 
-func ExampleSize_UnmarshalText() {
+func ExampleImageSize_UnmarshalText() {
 	for _, s := range []string{"", "small", "large", "xlarge"} {
-		var v Size
+		var v ImageSize
 		if err := (&v).UnmarshalText([]byte(s)); err != nil {
 			fmt.Println(err)
 		}
 	}
 }
 
-func TestSize_MarshalText_UnmarshalText(t *testing.T) {
-	for _, v := range []Size{UndefinedSize, Small, Large, XLarge} {
+func TestImageSize_MarshalText_UnmarshalText(t *testing.T) {
+	for _, v := range []ImageSize{UndefinedSize, Small, Large, XLarge} {
 		b, err := v.MarshalText()
 		if err != nil {
 			t.Errorf("cannot encode: %s", err)
 		}
 
-		var d Size
+		var d ImageSize
 		if err := (&d).UnmarshalText(b); err != nil {
 			t.Errorf("cannot decode: %s", err)
 		}
@@ -46,23 +46,23 @@ func TestSize_MarshalText_UnmarshalText(t *testing.T) {
 
 	t.Run("when unknown value, then error", func(t *testing.T) {
 		s := `something`
-		var v Size
+		var v ImageSize
 		err := (&v).UnmarshalText([]byte(s))
 		if err == nil {
 			t.Error("must be error")
 		}
-		if !errors.Is(err, ErrUnknownSize) {
+		if !errors.Is(err, ErrUnknownImageSize) {
 			t.Error("wrong error", err)
 		}
 	})
 }
 
-func TestSize_JSON(t *testing.T) {
+func TestImageSize_JSON(t *testing.T) {
 	type V struct {
-		Values []Size `json:"values"`
+		Values []ImageSize `json:"values"`
 	}
 
-	values := []Size{UndefinedSize, Small, Large, XLarge}
+	values := []ImageSize{UndefinedSize, Small, Large, XLarge}
 
 	var v V
 	s := `{"values":["","small","large","xlarge"]}`
@@ -90,15 +90,15 @@ func TestSize_JSON(t *testing.T) {
 		if err == nil {
 			t.Error("must be error")
 		}
-		if !errors.Is(err, ErrUnknownSize) {
+		if !errors.Is(err, ErrUnknownImageSize) {
 			t.Error("wrong error", err)
 		}
 	})
 }
 
-func BenchmarkSize_MarshalText(b *testing.B) {
+func BenchmarkImageSize_MarshalText(b *testing.B) {
 	for b.Loop() {
-		for _, c := range []Size{UndefinedSize, Small, Large, XLarge} {
+		for _, c := range []ImageSize{UndefinedSize, Small, Large, XLarge} {
 			if _, err := c.MarshalText(); err != nil {
 				b.Fatal("empty")
 			}
@@ -106,8 +106,8 @@ func BenchmarkSize_MarshalText(b *testing.B) {
 	}
 }
 
-func BenchmarkSize_UnmarshalText(b *testing.B) {
-	var x Size
+func BenchmarkImageSize_UnmarshalText(b *testing.B) {
+	var x ImageSize
 	for b.Loop() {
 		for _, c := range []string{"", "small", "large", "xlarge"} {
 			if err := x.UnmarshalText([]byte(c)); err != nil {
@@ -117,8 +117,8 @@ func BenchmarkSize_UnmarshalText(b *testing.B) {
 	}
 }
 
-func TestSize_String(t *testing.T) {
-	values := []Size{UndefinedSize, Small, Large, XLarge}
+func TestImageSize_String(t *testing.T) {
+	values := []ImageSize{UndefinedSize, Small, Large, XLarge}
 	tags := []string{"", "small", "large", "xlarge"}
 
 	for i := range values {
@@ -128,9 +128,9 @@ func TestSize_String(t *testing.T) {
 	}
 }
 
-func BenchmarkSize_String(b *testing.B) {
+func BenchmarkImageSize_String(b *testing.B) {
 	for b.Loop() {
-		for _, c := range []Size{UndefinedSize, Small, Large, XLarge} {
+		for _, c := range []ImageSize{UndefinedSize, Small, Large, XLarge} {
 			c.String()
 		}
 	}

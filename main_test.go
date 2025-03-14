@@ -36,19 +36,27 @@ func TestMain(t *testing.T) {
 	t.Run("ok", func(t *testing.T) {
 		exec.Command("cp", filepath.Join("internal", "testdata", "image.go"), filepath.Join(testdir, "image.go")).Run()
 
-		cmd := exec.Command(testbin, "--type", "Color")
-		cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(testdir, "image.go"), "GOLINE=4", "GOPACKAGE=image", "GOTESTDIR="+testdir)
-		cmd.Run()
+		t.Run("struct", func(t *testing.T) {
+			cmd := exec.Command(testbin, "--type", "Color")
+			cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(testdir, "image.go"), "GOLINE=4", "GOPACKAGE=image", "GOTESTDIR="+testdir)
+			if err := cmd.Run(); err != nil {
+				t.Error(err)
+			}
 
-		assertEqFile(t, filepath.Join(testdir, "color_enum_encoding.go"), filepath.Join("internal", "testdata", "color_enum_encoding.go"))
-		assertEqFile(t, filepath.Join(testdir, "color_enum_encoding_test.go"), filepath.Join("internal", "testdata", "color_enum_encoding_test.go"))
+			assertEqFile(t, filepath.Join(testdir, "color_enum_encoding.go"), filepath.Join("internal", "testdata", "color_enum_encoding.go"))
+			assertEqFile(t, filepath.Join(testdir, "color_enum_encoding_test.go"), filepath.Join("internal", "testdata", "color_enum_encoding_test.go"))
+		})
 
-		cmd = exec.Command(testbin, "--type", "Size", "--string")
-		cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(testdir, "image.go"), "GOLINE=18", "GOPACKAGE=image", "GOTESTDIR="+testdir)
-		cmd.Run()
+		t.Run("iota, string", func(t *testing.T) {
+			cmd := exec.Command(testbin, "--type", "ImageSize", "--string")
+			cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(testdir, "image.go"), "GOLINE=18", "GOPACKAGE=image", "GOTESTDIR="+testdir)
+			if err := cmd.Run(); err != nil {
+				t.Error(err)
+			}
 
-		assertEqFile(t, filepath.Join(testdir, "size_enum_encoding.go"), filepath.Join("internal", "testdata", "size_enum_encoding.go"))
-		assertEqFile(t, filepath.Join(testdir, "size_enum_encoding_test.go"), filepath.Join("internal", "testdata", "size_enum_encoding_test.go"))
+			assertEqFile(t, filepath.Join(testdir, "image_size_enum_encoding.go"), filepath.Join("internal", "testdata", "image_size_enum_encoding.go"))
+			assertEqFile(t, filepath.Join(testdir, "image_size_enum_encoding_test.go"), filepath.Join("internal", "testdata", "image_size_enum_encoding_test.go"))
+		})
 	})
 
 	t.Run("when bad go file, then error", func(t *testing.T) {

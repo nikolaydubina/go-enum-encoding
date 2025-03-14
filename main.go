@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	_ "embed"
 	"errors"
 	"flag"
@@ -69,18 +68,17 @@ func process(packageName, fileName, typeName, lineNum string, enableString bool)
 
 	ast.Inspect(f, func(astNode ast.Node) bool {
 		node, ok := astNode.(*ast.GenDecl)
-		if !ok || (node.Tok != token.CONST && node.Tok != token.VAR) {
+		if !ok || node == nil || (node.Tok != token.CONST && node.Tok != token.VAR) {
 			return true
 		}
 
-		position := fset.Position(node.Pos())
-		if position.Line != expectedLine {
+		if position := fset.Position(node.Pos()); position.Line != expectedLine {
 			return false
 		}
 
 		for _, astSpec := range node.Specs {
 			spec, ok := astSpec.(*ast.ValueSpec)
-			if !ok {
+			if !ok || spec == nil {
 				continue
 			}
 
@@ -107,15 +105,6 @@ func process(packageName, fileName, typeName, lineNum string, enableString bool)
 		return errors.New(fileName + ": unable to find values for enum type: " + typeName)
 	}
 
-	r := (&replacer{vals: make(map[string]string), specs: specs}).
-		With("{{.Type}}", typeName).
-		With("{{.Package}}", packageName).
-		WithMap("{{.Values}}", func(_ int, v [2]string) string { return v[0] }, ", ").
-		WithMap("{{.Tags}}", func(_ int, v [2]string) string { return `"` + v[1] + `"` }, ",").
-		WithMap("{{.TagsNaked}}", func(_ int, v [2]string) string { return v[1] }, " ").
-		WithMap("{{.seq_bytes}}", func(_ int, v [2]string) string { return `[]byte("` + v[1] + `")` }, ", ").
-		WithMap("{{.seq_string}}", func(_ int, v [2]string) string { return `"` + v[1] + `"` }, ", ")
-
 	templateCode := templateEnum
 	templateTest := templateEnumTest
 	if enableString {
@@ -123,52 +112,40 @@ func process(packageName, fileName, typeName, lineNum string, enableString bool)
 		templateTest += "\n" + templateStringTest
 	}
 
-	r = r.
-		WithMap("{{.string_to_value_switch}}", func(_ int, v [2]string) string { return `case "` + v[1] + "\":\n *s = " + v[0] }, "\n").
-		WithMap("{{.value_to_bytes_switch}}", func(i int, v [2]string) string {
+	replacer := strings.NewReplacer(
+		"{{.Type}}", typeName,
+		"{{.Package}}", packageName,
+		"{{.Values}}", mapJoin(specs, func(_ int, v [2]string) string { return v[0] }, ", "),
+		"{{.Tags}}", mapJoin(specs, func(_ int, v [2]string) string { return `"` + v[1] + `"` }, ","),
+		"{{.TagsNaked}}", mapJoin(specs, func(_ int, v [2]string) string { return v[1] }, " "),
+		"{{.seq_bytes}}", mapJoin(specs, func(_ int, v [2]string) string { return `[]byte("` + v[1] + `")` }, ", "),
+		"{{.seq_string}}", mapJoin(specs, func(_ int, v [2]string) string { return `"` + v[1] + `"` }, ", "),
+		"{{.string_to_value_switch}}", mapJoin(specs, func(_ int, v [2]string) string { return `case "` + v[1] + "\":\n *s = " + v[0] }, "\n"),
+		"{{.value_to_bytes_switch}}", mapJoin(specs, func(i int, v [2]string) string {
 			return `case ` + v[0] + ":\n return seq_bytes_" + typeName + "[" + strconv.Itoa(i) + `], nil`
-		}, "\n").
-		WithMap("{{.value_to_string_switch}}", func(i int, v [2]string) string {
+		}, "\n"),
+		"{{.value_to_string_switch}}", mapJoin(specs, func(i int, v [2]string) string {
 			return `case ` + v[0] + ":\n return seq_string_" + typeName + "[" + strconv.Itoa(i) + `]`
-		}, "\n")
+		}, "\n"),
+	)
 
-	bastPath := filepath.Join(filepath.Dir(fileName), camelCaseToSnakeCase(strings.ToLower(typeName)))
+	bastPath := filepath.Join(filepath.Dir(fileName), camelCaseToSnakeCase(typeName))
 
 	return errors.Join(
-		writeCode(r.Apply([]byte(templateCode)), bastPath+"_enum_encoding.go"),
-		writeCode(r.Apply([]byte(templateTest)), bastPath+"_enum_encoding_test.go"),
+		writeCode([]byte(replacer.Replace(templateCode)), bastPath+"_enum_encoding.go"),
+		writeCode([]byte(replacer.Replace(templateTest)), bastPath+"_enum_encoding_test.go"),
 	)
 }
 
-type replacer struct {
-	vals  map[string]string
-	specs [][2]string
-}
-
-func (r *replacer) With(k, v string) *replacer {
-	r.vals[k] = v
-	return r
-}
-
-func (r *replacer) WithMap(k string, f func(idx int, val [2]string) string, sep string) *replacer {
-	strings.NewReplacer()
-
+func mapJoin(vs [][2]string, f func(idx int, val [2]string) string, sep string) string {
 	var b strings.Builder
-	for i, v := range r.specs {
+	for i, v := range vs {
 		if i > 0 {
 			b.WriteString(sep)
 		}
 		b.WriteString(f(i, v))
 	}
-	r.vals[k] = b.String()
-	return r
-}
-
-func (r *replacer) Apply(s []byte) []byte {
-	for k, v := range r.vals {
-		s = bytes.ReplaceAll(s, []byte(k), []byte(v))
-	}
-	return []byte(s)
+	return b.String()
 }
 
 func writeCode(code []byte, outFilePath string) error {
@@ -181,14 +158,18 @@ func writeCode(code []byte, outFilePath string) error {
 
 func camelCaseToSnakeCase(s string) string {
 	var b strings.Builder
+	var isPrevUpper bool
 	for i, r := range s {
 		if unicode.IsUpper(r) {
-			if i > 0 && !unicode.IsUpper(rune(s[i-1])) {
+			if i > 0 && !isPrevUpper {
 				b.WriteRune('_')
 			}
-			r = unicode.ToLower(r)
+			isPrevUpper = true
+			b.WriteRune(unicode.ToLower(r))
+		} else {
+			isPrevUpper = false
+			b.WriteRune(r)
 		}
-		b.WriteRune(r)
 	}
 	return b.String()
 }

@@ -14,11 +14,11 @@ type V struct {
 	Color Color `json:"color"`
 }
 
-type Size uint8
+type ImageSize uint8
 
 const (
-	UndefinedSize Size = iota // json:""
-	Small                     // json:"small"
-	Large                     // json:"large"
-	XLarge                    // json:"xlarge"
+	UndefinedSize ImageSize = iota // json:""
+	Small                          // json:"small"
+	Large                          // json:"large"
+	XLarge                         // json:"xlarge"
 )
