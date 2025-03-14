@@ -108,7 +108,7 @@ func BenchmarkImageSize_UnmarshalText(b *testing.B) {
 }
 
 func BenchmarkImageSize_AppendText(b *testing.B) {
-	bb := make([]byte, 10)
+	bb := make([]byte, 10, 1000)
 
 	vs := []ImageSize{UndefinedSize, Small, Large, XLarge}
 	v := vs[rand.Intn(len(vs))]

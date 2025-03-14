@@ -46,20 +46,20 @@ const (
 Generated benchmarks:
 
 ```bash
-$ go test -bench=. -benchmem .
+$ go test -bench=. -benchmem .                  
 goos: darwin
 goarch: arm64
-pkg: test
+pkg: github.com/nikolaydubina/go-enum-encoding/internal/testdata
 cpu: Apple M3 Max
-BenchmarkColor_UnmarshalText-16         804431073                1.366 ns/op           0 B/op          0 allocs/op
-BenchmarkColor_AppendText-16            81371102                14.01 ns/op           24 B/op          1 allocs/op
-BenchmarkColor_MarshalText-16           84193539                13.77 ns/op            8 B/op          1 allocs/op
-BenchmarkImageSize_UnmarshalText-16     900864548                1.345 ns/op           0 B/op          0 allocs/op
-BenchmarkImageSize_AppendText-16        82080981                14.07 ns/op           24 B/op          1 allocs/op
-BenchmarkImageSize_MarshalText-16       498537706                2.429 ns/op           0 B/op          0 allocs/op
-BenchmarkImageSize_String-16            1000000000               1.076 ns/op           0 B/op          0 allocs/op
+BenchmarkColor_UnmarshalText-16         752573839                1.374 ns/op           0 B/op          0 allocs/op
+BenchmarkColor_AppendText-16            450123993                2.676 ns/op           0 B/op          0 allocs/op
+BenchmarkColor_MarshalText-16           80059376                13.68 ns/op            8 B/op          1 allocs/op
+BenchmarkImageSize_UnmarshalText-16     751743885                1.601 ns/op           0 B/op          0 allocs/op
+BenchmarkImageSize_AppendText-16        500286883                2.402 ns/op           0 B/op          0 allocs/op
+BenchmarkImageSize_MarshalText-16       81467318                16.46 ns/op            8 B/op          1 allocs/op
+BenchmarkImageSize_String-16            856463289                1.330 ns/op           0 B/op          0 allocs/op
 PASS
-ok      test    8.221s
+ok      github.com/nikolaydubina/go-enum-encoding/internal/testdata     8.561s
 ```
 
 ## References

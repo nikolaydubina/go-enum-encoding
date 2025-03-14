@@ -109,7 +109,7 @@ func Benchmark{{.Type}}_UnmarshalText(b *testing.B) {
 }
 
 func Benchmark{{.Type}}_AppendText(b *testing.B) {
-	bb := make([]byte, 10)
+	bb := make([]byte, 10, 1000)
 	
 	vs := []{{.Type}}{{{.Values}}} 
 	v := vs[rand.Intn(len(vs))]

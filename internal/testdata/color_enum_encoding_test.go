@@ -108,7 +108,7 @@ func BenchmarkColor_UnmarshalText(b *testing.B) {
 }
 
 func BenchmarkColor_AppendText(b *testing.B) {
-	bb := make([]byte, 10)
+	bb := make([]byte, 10, 1000)
 
 	vs := []Color{UndefinedColor, Red, Green, Blue}
 	v := vs[rand.Intn(len(vs))]
