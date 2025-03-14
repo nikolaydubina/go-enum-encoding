@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"slices"
 	"testing"
 )
@@ -96,23 +97,32 @@ func TestColor_JSON(t *testing.T) {
 	})
 }
 
-func BenchmarkColor_MarshalText(b *testing.B) {
+func BenchmarkColor_UnmarshalText(b *testing.B) {
+	vb := seq_bytes_Color[rand.Intn(len(seq_bytes_Color))]
+
+	var x Color
+
 	for b.Loop() {
-		for _, c := range []Color{UndefinedColor, Red, Green, Blue} {
-			if _, err := c.MarshalText(); err != nil {
-				b.Fatal("empty")
-			}
-		}
+		_ = x.UnmarshalText(vb)
 	}
 }
 
-func BenchmarkColor_UnmarshalText(b *testing.B) {
-	var x Color
+func BenchmarkColor_AppendText(b *testing.B) {
+	bb := make([]byte, 10)
+
+	vs := []Color{UndefinedColor, Red, Green, Blue}
+	v := vs[rand.Intn(len(vs))]
+
 	for b.Loop() {
-		for _, c := range []string{"", "red", "green", "blue"} {
-			if err := x.UnmarshalText([]byte(c)); err != nil {
-				b.Fatal("cannot decode")
-			}
-		}
+		_, _ = v.AppendText(bb)
+	}
+}
+
+func BenchmarkColor_MarshalText(b *testing.B) {
+	vs := []Color{UndefinedColor, Red, Green, Blue}
+	v := vs[rand.Intn(len(vs))]
+
+	for b.Loop() {
+		_, _ = v.MarshalText()
 	}
 }

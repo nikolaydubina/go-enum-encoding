@@ -43,6 +43,25 @@ const (
 )
 ```
 
+Generated benchmarks:
+
+```bash
+$ go test -bench=. -benchmem .
+goos: darwin
+goarch: arm64
+pkg: test
+cpu: Apple M3 Max
+BenchmarkColor_UnmarshalText-16         804431073                1.366 ns/op           0 B/op          0 allocs/op
+BenchmarkColor_AppendText-16            81371102                14.01 ns/op           24 B/op          1 allocs/op
+BenchmarkColor_MarshalText-16           84193539                13.77 ns/op            8 B/op          1 allocs/op
+BenchmarkImageSize_UnmarshalText-16     900864548                1.345 ns/op           0 B/op          0 allocs/op
+BenchmarkImageSize_AppendText-16        82080981                14.07 ns/op           24 B/op          1 allocs/op
+BenchmarkImageSize_MarshalText-16       498537706                2.429 ns/op           0 B/op          0 allocs/op
+BenchmarkImageSize_String-16            1000000000               1.076 ns/op           0 B/op          0 allocs/op
+PASS
+ok      test    8.221s
+```
+
 ## References
 
 - http://github.com/zarldev/goenums - does much more advanced struct generation, generates all enum utilities besides encoding, does not generate tests, uses similar notation to trigger go:generate but with different comment directives (non-json field tags)

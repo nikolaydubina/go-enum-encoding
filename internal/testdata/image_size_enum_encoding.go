@@ -24,16 +24,18 @@ func (s *ImageSize) UnmarshalText(text []byte) error {
 
 var seq_bytes_ImageSize = [...][]byte{[]byte(""), []byte("small"), []byte("large"), []byte("xlarge")}
 
-func (s ImageSize) MarshalText() ([]byte, error) {
+func (s ImageSize) MarshalText() ([]byte, error) { return s.AppendText(nil) }
+
+func (s ImageSize) AppendText(b []byte) ([]byte, error) {
 	switch s {
 	case UndefinedSize:
-		return seq_bytes_ImageSize[0], nil
+		return append(b, seq_bytes_ImageSize[0]...), nil
 	case Small:
-		return seq_bytes_ImageSize[1], nil
+		return append(b, seq_bytes_ImageSize[1]...), nil
 	case Large:
-		return seq_bytes_ImageSize[2], nil
+		return append(b, seq_bytes_ImageSize[2]...), nil
 	case XLarge:
-		return seq_bytes_ImageSize[3], nil
+		return append(b, seq_bytes_ImageSize[3]...), nil
 	default:
 		return nil, ErrUnknownImageSize
 	}

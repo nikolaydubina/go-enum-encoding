@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"slices"
 	"testing"
+	"math/rand"
 )
 
 func Example{{.Type}}_MarshalText() {
@@ -96,23 +97,33 @@ func Test{{.Type}}_JSON(t *testing.T) {
 	})
 }
 
-func Benchmark{{.Type}}_MarshalText(b *testing.B) {
+
+func Benchmark{{.Type}}_UnmarshalText(b *testing.B) {
+	vb := seq_bytes_{{.Type}}[rand.Intn(len(seq_bytes_{{.Type}}))]
+
+	var x {{.Type}}
+
 	for b.Loop() {
-		for _, c := range []{{.Type}}{{{.Values}}} {
-			if _, err := c.MarshalText(); err != nil {
-				b.Fatal("empty")
-			}
-		}
+		_ = x.UnmarshalText(vb)
 	}
 }
 
-func Benchmark{{.Type}}_UnmarshalText(b *testing.B) {
-	var x {{.Type}}
+func Benchmark{{.Type}}_AppendText(b *testing.B) {
+	bb := make([]byte, 10)
+	
+	vs := []{{.Type}}{{{.Values}}} 
+	v := vs[rand.Intn(len(vs))]
+
 	for b.Loop() {
-		for _, c := range []string{{{.Tags}}} {
-			if err := x.UnmarshalText([]byte(c)); err != nil {
-				b.Fatal("cannot decode")
-			}
-		}
+		_, _ = v.AppendText(bb)
+	}
+}
+
+func Benchmark{{.Type}}_MarshalText(b *testing.B) {
+	vs := []{{.Type}}{{{.Values}}} 
+	v := vs[rand.Intn(len(vs))]
+
+	for b.Loop() {
+		_, _ = v.MarshalText()
 	}
 }

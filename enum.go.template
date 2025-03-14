@@ -17,9 +17,11 @@ func (s *{{.Type}}) UnmarshalText(text []byte) error {
 
 var seq_bytes_{{.Type}} = [...][]byte{{{.seq_bytes}}}
 
-func (s {{.Type}}) MarshalText() ([]byte, error) {
+func (s {{.Type}}) MarshalText() ([]byte, error) { return s.AppendText(nil) }
+
+func (s {{.Type}}) AppendText(b []byte) ([]byte, error) {
 	switch s {
-    {{.value_to_bytes_switch}}
+    {{.value_to_append_bytes_switch}}
 	default:
 		return nil,  ErrUnknown{{.Type}}
 	}

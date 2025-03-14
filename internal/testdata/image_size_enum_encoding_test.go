@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"slices"
 	"testing"
 )
@@ -96,24 +97,33 @@ func TestImageSize_JSON(t *testing.T) {
 	})
 }
 
-func BenchmarkImageSize_MarshalText(b *testing.B) {
+func BenchmarkImageSize_UnmarshalText(b *testing.B) {
+	vb := seq_bytes_ImageSize[rand.Intn(len(seq_bytes_ImageSize))]
+
+	var x ImageSize
+
 	for b.Loop() {
-		for _, c := range []ImageSize{UndefinedSize, Small, Large, XLarge} {
-			if _, err := c.MarshalText(); err != nil {
-				b.Fatal("empty")
-			}
-		}
+		_ = x.UnmarshalText(vb)
 	}
 }
 
-func BenchmarkImageSize_UnmarshalText(b *testing.B) {
-	var x ImageSize
+func BenchmarkImageSize_AppendText(b *testing.B) {
+	bb := make([]byte, 10)
+
+	vs := []ImageSize{UndefinedSize, Small, Large, XLarge}
+	v := vs[rand.Intn(len(vs))]
+
 	for b.Loop() {
-		for _, c := range []string{"", "small", "large", "xlarge"} {
-			if err := x.UnmarshalText([]byte(c)); err != nil {
-				b.Fatal("cannot decode")
-			}
-		}
+		_, _ = v.AppendText(bb)
+	}
+}
+
+func BenchmarkImageSize_MarshalText(b *testing.B) {
+	vs := []ImageSize{UndefinedSize, Small, Large, XLarge}
+	v := vs[rand.Intn(len(vs))]
+
+	for b.Loop() {
+		_, _ = v.MarshalText()
 	}
 }
 
@@ -129,9 +139,10 @@ func TestImageSize_String(t *testing.T) {
 }
 
 func BenchmarkImageSize_String(b *testing.B) {
+	vs := []ImageSize{UndefinedSize, Small, Large, XLarge}
+	v := vs[rand.Intn(len(vs))]
+
 	for b.Loop() {
-		for _, c := range []ImageSize{UndefinedSize, Small, Large, XLarge} {
-			c.String()
-		}
+		_ = v.String()
 	}
 }

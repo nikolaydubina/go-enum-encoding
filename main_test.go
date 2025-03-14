@@ -57,6 +57,18 @@ func TestMain(t *testing.T) {
 			assertEqFile(t, filepath.Join(testdir, "image_size_enum_encoding.go"), filepath.Join("internal", "testdata", "image_size_enum_encoding.go"))
 			assertEqFile(t, filepath.Join(testdir, "image_size_enum_encoding_test.go"), filepath.Join("internal", "testdata", "image_size_enum_encoding_test.go"))
 		})
+
+		t.Run("run tests within generated code", func(t *testing.T) {
+			from, _ := os.Getwd()
+			os.Chdir(testdir)
+			t.Cleanup(func() { os.Chdir(from) })
+
+			os.WriteFile(filepath.Join(testdir, "go.mod"), []byte("module test\ngo 1.24"), 0644)
+
+			if b, err := exec.Command("go", "test", ".").CombinedOutput(); err != nil {
+				t.Error(err, string(b))
+			}
+		})
 	})
 
 	t.Run("when bad go file, then error", func(t *testing.T) {

@@ -10,9 +10,10 @@ func Test{{.Type}}_String(t *testing.T) {
 }
 
 func Benchmark{{.Type}}_String(b *testing.B) {
+	vs := []{{.Type}}{{{.Values}}} 
+	v := vs[rand.Intn(len(vs))]
+	
 	for b.Loop() {
-		for _, c := range []{{.Type}}{{{.Values}}} {
-			c.String()
-		}
+		_  = v.String()
 	}
 }

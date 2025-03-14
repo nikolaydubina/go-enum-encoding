@@ -121,8 +121,8 @@ func process(packageName, fileName, typeName, lineNum string, enableString bool)
 		"{{.seq_bytes}}", mapJoin(specs, func(_ int, v [2]string) string { return `[]byte("` + v[1] + `")` }, ", "),
 		"{{.seq_string}}", mapJoin(specs, func(_ int, v [2]string) string { return `"` + v[1] + `"` }, ", "),
 		"{{.string_to_value_switch}}", mapJoin(specs, func(_ int, v [2]string) string { return `case "` + v[1] + "\":\n *s = " + v[0] }, "\n"),
-		"{{.value_to_bytes_switch}}", mapJoin(specs, func(i int, v [2]string) string {
-			return `case ` + v[0] + ":\n return seq_bytes_" + typeName + "[" + strconv.Itoa(i) + `], nil`
+		"{{.value_to_append_bytes_switch}}", mapJoin(specs, func(i int, v [2]string) string {
+			return `case ` + v[0] + ":\n return append(b, seq_bytes_" + typeName + "[" + strconv.Itoa(i) + `]...), nil`
 		}, "\n"),
 		"{{.value_to_string_switch}}", mapJoin(specs, func(i int, v [2]string) string {
 			return `case ` + v[0] + ":\n return seq_string_" + typeName + "[" + strconv.Itoa(i) + `]`
