@@ -12,7 +12,7 @@ go install github.com/nikolaydubina/go-enum-encoding@latest
 
 * 200 LOC
 * simple, fast, strict
-* generates encoding/decoding, tests, benchmarks
+* generate encoding/decoding, tests, benchmarks
 
 ```go
 type Color struct{ c uint8 }
@@ -26,7 +26,7 @@ var (
 )
 ```
 
-It also works with raw `iota` enums:
+`iota` is ok too
 
 ```go
 type Size uint8
@@ -40,7 +40,7 @@ const (
 )
 ```
 
-Generated benchmarks:
+generated benchmarks
 
 ```bash
 $ go test -bench=. -benchmem .                  
