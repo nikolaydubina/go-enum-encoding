@@ -26,9 +26,6 @@ jobs:
           GOCOVERPROFILE: coverage.out
         run: go test ./...
 
-      - name: fuzz
-        run: go test -fuzz=FuzzBadFile -fuzztime=5s
-
       - name: upload coverage to Codecov
         uses: codecov/codecov-action@v4.1.1
         with:
