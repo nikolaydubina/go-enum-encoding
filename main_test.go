@@ -39,7 +39,8 @@ func TestMain(t *testing.T) {
 		exec.Command("cp", filepath.Join("internal", "testdata", "image.go"), filepath.Join(testdir, "image.go")).Run()
 
 		t.Run("struct", func(t *testing.T) {
-			covdir := t.TempDir()
+			covdir := "cov_struct"
+			exec.Command("mkdir", covdir).Run()
 			covdirs = append(covdirs, covdir)
 
 			cmd := exec.Command(testbin, "--type", "Color")
@@ -53,7 +54,8 @@ func TestMain(t *testing.T) {
 		})
 
 		t.Run("iota, string", func(t *testing.T) {
-			covdir := t.TempDir()
+			covdir := "cov_iota"
+			exec.Command("mkdir", covdir).Run()
 			covdirs = append(covdirs, covdir)
 
 			cmd := exec.Command(testbin, "--type", "ImageSize", "--string")
@@ -80,7 +82,8 @@ func TestMain(t *testing.T) {
 	})
 
 	t.Run("when bad go file, then error", func(t *testing.T) {
-		covdir := t.TempDir()
+		covdir := "cov_err_bad_file"
+		exec.Command("mkdir", covdir).Run()
 		covdirs = append(covdirs, covdir)
 
 		exec.Command("cp", filepath.Join("internal", "README.md"), filepath.Join(testdir, "README.md")).Run()
@@ -93,7 +96,8 @@ func TestMain(t *testing.T) {
 	})
 
 	t.Run("when enum values not immediately after go:generate line, then error", func(t *testing.T) {
-		covdir := t.TempDir()
+		covdir := "cov_err_enum"
+		exec.Command("mkdir", covdir).Run()
 		covdirs = append(covdirs, covdir)
 
 		cmd := exec.Command(testbin, "--type", "Color")
@@ -104,7 +108,8 @@ func TestMain(t *testing.T) {
 	})
 
 	t.Run("when invalid package name, then error", func(t *testing.T) {
-		covdir := t.TempDir()
+		covdir := "cov_err_invalid_pkg"
+		exec.Command("mkdir", covdir).Run()
 		covdirs = append(covdirs, covdir)
 
 		cmd := exec.Command(testbin, "--type", "Color")
@@ -115,7 +120,8 @@ func TestMain(t *testing.T) {
 	})
 
 	t.Run("when not found file, then error", func(t *testing.T) {
-		covdir := t.TempDir()
+		covdir := "cov_err_file_not_found"
+		exec.Command("mkdir", covdir).Run()
 		covdirs = append(covdirs, covdir)
 
 		cmd := exec.Command(testbin, "--type", "Color")
@@ -126,7 +132,8 @@ func TestMain(t *testing.T) {
 	})
 
 	t.Run("when wrong params, then error", func(t *testing.T) {
-		covdir := t.TempDir()
+		covdir := "cov_err_wrong_params"
+		exec.Command("mkdir", covdir).Run()
 		covdirs = append(covdirs, covdir)
 
 		cmd := exec.Command(testbin)
