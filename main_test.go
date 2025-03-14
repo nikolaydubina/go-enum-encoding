@@ -32,11 +32,21 @@ func TestMain(t *testing.T) {
 	var covdirs []string
 	testdir := t.TempDir()
 	testbin := path.Join(testdir, "go-enum-encoding-test")
-	exec.Command("go", "build", "-cover", "-o", testbin, "main.go").Run()
-	defer exec.Command("go", "tool", "covdata", "textfmt", "-i="+strings.Join(covdirs, ","), "-o", os.Getenv("GOCOVERPROFILE")).Run()
+
+	if b, err := exec.Command("go", "build", "-cover", "-o", testbin, "main.go").CombinedOutput(); err != nil {
+		t.Fatal(err, string(b))
+	}
+
+	defer func() {
+		if b, err := exec.Command("go", "tool", "covdata", "textfmt", "-i="+strings.Join(covdirs, ","), "-o", os.Getenv("GOCOVERPROFILE")).CombinedOutput(); err != nil {
+			t.Error(err, string(b))
+		}
+	}()
 
 	t.Run("ok", func(t *testing.T) {
-		exec.Command("cp", filepath.Join("internal", "testdata", "image.go"), filepath.Join(testdir, "image.go")).Run()
+		if b, err := exec.Command("cp", filepath.Join("internal", "testdata", "image.go"), filepath.Join(testdir, "image.go")).CombinedOutput(); err != nil {
+			t.Fatal(err, string(b))
+		}
 
 		t.Run("struct", func(t *testing.T) {
 			covdir := "cov_struct"
