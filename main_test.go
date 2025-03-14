@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -28,17 +29,21 @@ func FuzzBadFile(f *testing.F) {
 }
 
 func TestMain(t *testing.T) {
+	var covdirs []string
 	testdir := t.TempDir()
 	testbin := path.Join(testdir, "go-enum-encoding-test")
 	exec.Command("go", "build", "-cover", "-o", testbin, "main.go").Run()
-	defer exec.Command("go", "tool", "covdata", "textfmt", "-i="+testdir, "-o", os.Getenv("GOCOVERPROFILE")).Run()
+	defer exec.Command("go", "tool", "covdata", "textfmt", "-i="+strings.Join(covdirs, ","), "-o", os.Getenv("GOCOVERPROFILE")).Run()
 
 	t.Run("ok", func(t *testing.T) {
 		exec.Command("cp", filepath.Join("internal", "testdata", "image.go"), filepath.Join(testdir, "image.go")).Run()
 
 		t.Run("struct", func(t *testing.T) {
+			covdir := t.TempDir()
+			covdirs = append(covdirs, covdir)
+
 			cmd := exec.Command(testbin, "--type", "Color")
-			cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(testdir, "image.go"), "GOLINE=4", "GOPACKAGE=image", "GOTESTDIR="+testdir, "GOCOVERDIR="+testdir)
+			cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(testdir, "image.go"), "GOLINE=4", "GOPACKAGE=image", "GOTESTDIR="+testdir, "GOCOVERDIR="+covdir)
 			if err := cmd.Run(); err != nil {
 				t.Error(err)
 			}
@@ -48,8 +53,11 @@ func TestMain(t *testing.T) {
 		})
 
 		t.Run("iota, string", func(t *testing.T) {
+			covdir := t.TempDir()
+			covdirs = append(covdirs, covdir)
+
 			cmd := exec.Command(testbin, "--type", "ImageSize", "--string")
-			cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(testdir, "image.go"), "GOLINE=18", "GOPACKAGE=image", "GOTESTDIR="+testdir, "GOCOVERDIR="+testdir)
+			cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(testdir, "image.go"), "GOLINE=18", "GOPACKAGE=image", "GOTESTDIR="+testdir, "GOCOVERDIR="+covdir)
 			if err := cmd.Run(); err != nil {
 				t.Error(err)
 			}
@@ -72,42 +80,57 @@ func TestMain(t *testing.T) {
 	})
 
 	t.Run("when bad go file, then error", func(t *testing.T) {
+		covdir := t.TempDir()
+		covdirs = append(covdirs, covdir)
+
 		exec.Command("cp", filepath.Join("internal", "README.md"), filepath.Join(testdir, "README.md")).Run()
 
 		cmd := exec.Command(testbin, "--type", "Color")
-		cmd.Env = append(cmd.Environ(), "GOFILE=README.md", "GOLINE=5", "GOPACKAGE=image", "GOTESTDIR="+testdir)
+		cmd.Env = append(cmd.Environ(), "GOFILE=README.md", "GOLINE=5", "GOPACKAGE=image", "GOTESTDIR="+testdir, "GOCOVERDIR="+covdir)
 		if err := cmd.Run(); err == nil {
 			t.Fatal("must be error")
 		}
 	})
 
 	t.Run("when enum values not immediately after go:generate line, then error", func(t *testing.T) {
+		covdir := t.TempDir()
+		covdirs = append(covdirs, covdir)
+
 		cmd := exec.Command(testbin, "--type", "Color")
-		cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(testdir, "image.go"), "GOLINE=1", "GOPACKAGE=image", "GOTESTDIR="+testdir)
+		cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(testdir, "image.go"), "GOLINE=1", "GOPACKAGE=image", "GOTESTDIR="+testdir, "GOCOVERDIR="+covdir)
 		if err := cmd.Run(); err == nil {
 			t.Fatal("must be error")
 		}
 	})
 
 	t.Run("when invalid package name, then error", func(t *testing.T) {
+		covdir := t.TempDir()
+		covdirs = append(covdirs, covdir)
+
 		cmd := exec.Command(testbin, "--type", "Color")
-		cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(testdir, "image.go"), "GOLINE=5", "GOPACKAGE=\"", "GOTESTDIR="+testdir)
+		cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(testdir, "image.go"), "GOLINE=5", "GOPACKAGE=\"", "GOTESTDIR="+testdir, "GOCOVERDIR="+covdir)
 		if err := cmd.Run(); err == nil {
 			t.Fatal("must be error")
 		}
 	})
 
 	t.Run("when not found file, then error", func(t *testing.T) {
+		covdir := t.TempDir()
+		covdirs = append(covdirs, covdir)
+
 		cmd := exec.Command(testbin, "--type", "Color")
-		cmd.Env = append(cmd.Environ(), "GOFILE=asdf.asdf", "GOPACKAGE=image", "GOLINE=5", "GOTESTDIR="+testdir)
+		cmd.Env = append(cmd.Environ(), "GOFILE=asdf.asdf", "GOPACKAGE=image", "GOLINE=5", "GOTESTDIR="+testdir, "GOCOVERDIR="+covdir)
 		if err := cmd.Run(); err == nil {
 			t.Fatal("must be error")
 		}
 	})
 
 	t.Run("when wrong params, then error", func(t *testing.T) {
+		covdir := t.TempDir()
+		covdirs = append(covdirs, covdir)
+
 		cmd := exec.Command(testbin)
-		cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(testdir, "image.go"), "GOLINE=5", "GOPACKAGE=color", "GOTESTDIR="+testdir)
+		cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(testdir, "image.go"), "GOLINE=5", "GOPACKAGE=color", "GOTESTDIR="+testdir, "GOCOVERDIR="+covdir)
 		if err := cmd.Run(); err == nil {
 			t.Fatal("must be error")
 		}
