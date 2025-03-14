@@ -1,5 +1,9 @@
-var value_to_string_{{.Type}} = map[{{.Type}}]string{
-    {{.value_to_string_map}}
-}
+var seq_string_{{.Type}} = [...]string{{{.seq_string}}}
 
-func (s {{.Type}}) {{.StringMethod}}() string { return value_to_string_{{.Type}}[s] }
+func (s {{.Type}}) String() string {
+	switch s {
+    {{.value_to_string_switch}}
+	default:
+		return ""
+	}
+}

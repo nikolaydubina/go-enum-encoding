@@ -5,170 +5,130 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
-func FuzzBadFile(f *testing.F) {
-	testbin := path.Join(f.TempDir(), "go-enum-encoding-test")
-	exec.Command("go", "build", "-cover", "-o", testbin, "main.go").Run()
-
-	f.Fuzz(func(t *testing.T, orig string) {
-		t.Run("when bad go file, then error", func(t *testing.T) {
-			fname := path.Join(t.TempDir(), "fuzz-test-file.go")
-			os.WriteFile(fname, []byte(orig), 0644)
-
-			cmd := exec.Command(testbin, "--type", "Color")
-			cmd.Env = append(cmd.Environ(), "GOFILE="+fname, "GOPACKAGE=color")
-			if err := cmd.Run(); err == nil {
-				t.Fatal("must be error")
-			}
-		})
-	})
-}
-
 func TestMain(t *testing.T) {
-	coverdir, outdir := t.TempDir(), t.TempDir()
-	testbin := path.Join(t.TempDir(), "go-enum-encoding-test")
-	exec.Command("go", "build", "-cover", "-o", testbin, "main.go").Run()
-	defer exec.Command("go", "tool", "covdata", "textfmt", "-i="+coverdir, "-o", os.Getenv("GOCOVERPROFILE")).Run()
+	var covdirs []string
+	testdir := t.TempDir()
+	testbin := path.Join(testdir, "go-enum-encoding-test")
 
-	assertFile := func(t *testing.T, a string) {
-		t.Helper()
-		assertEqFile(t, filepath.Join(outdir, a), filepath.Join("internal", "exp", a))
+	if b, err := exec.Command("go", "build", "-cover", "-o", testbin, "main.go").CombinedOutput(); err != nil {
+		t.Fatal(err, string(b))
 	}
 
-	t.Run("when ok, then file matches expected", func(t *testing.T) {
-		t.Run("when short mode, then file matches expected", func(t *testing.T) {
-			exec.Command("cp", filepath.Join("internal", "color.go"), filepath.Join(outdir, "color.go")).Run()
+	defer func() {
+		if b, err := exec.Command("go", "tool", "covdata", "textfmt", "-i="+strings.Join(covdirs, ","), "-o", os.Getenv("GOCOVERPROFILE")).CombinedOutput(); err != nil {
+			t.Error(err, string(b))
+		}
+	}()
+
+	t.Run("ok", func(t *testing.T) {
+		if b, err := exec.Command("cp", filepath.Join("internal", "testdata", "image.go"), filepath.Join(testdir, "image.go")).CombinedOutput(); err != nil {
+			t.Fatal(err, string(b))
+		}
+
+		t.Run("struct", func(t *testing.T) {
+			covdir := "cov_struct"
+			exec.Command("mkdir", covdir).Run()
+			covdirs = append(covdirs, covdir)
 
 			cmd := exec.Command(testbin, "--type", "Color")
-			cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(outdir, "color.go"), "GOLINE=4", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
-			cmd.Run()
+			cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(testdir, "image.go"), "GOLINE=4", "GOPACKAGE=image", "GOTESTDIR="+testdir, "GOCOVERDIR="+covdir)
+			if err := cmd.Run(); err != nil {
+				t.Error(err)
+			}
 
-			assertFile(t, "color_enum_encoding.go")
-			assertFile(t, "color_enum_encoding_test.go")
-			assertFile(t, "color_enum_encoding_json_test.go")
+			assertEqFile(t, filepath.Join(testdir, "color_enum_encoding.go"), filepath.Join("internal", "testdata", "color_enum_encoding.go"))
+			assertEqFile(t, filepath.Join(testdir, "color_enum_encoding_test.go"), filepath.Join("internal", "testdata", "color_enum_encoding_test.go"))
 		})
 
-		t.Run("when auto mode, then long can be detected and file matches expected", func(t *testing.T) {
-			exec.Command("cp", filepath.Join("internal", "currency.go"), filepath.Join(outdir, "currency.go")).Run()
+		t.Run("iota, string", func(t *testing.T) {
+			covdir := "cov_iota"
+			exec.Command("mkdir", covdir).Run()
+			covdirs = append(covdirs, covdir)
 
-			cmd := exec.Command(testbin, "--type", "Currency")
-			cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(outdir, "currency.go"), "GOLINE=4", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
-			cmd.Run()
+			cmd := exec.Command(testbin, "--type", "ImageSize", "--string")
+			cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(testdir, "image.go"), "GOLINE=18", "GOPACKAGE=image", "GOTESTDIR="+testdir, "GOCOVERDIR="+covdir)
+			if err := cmd.Run(); err != nil {
+				t.Error(err)
+			}
 
-			assertFile(t, "currency_enum_encoding.go")
-			assertFile(t, "currency_enum_encoding_test.go")
-			assertFile(t, "currency_enum_encoding_json_test.go")
+			assertEqFile(t, filepath.Join(testdir, "image_size_enum_encoding.go"), filepath.Join("internal", "testdata", "image_size_enum_encoding.go"))
+			assertEqFile(t, filepath.Join(testdir, "image_size_enum_encoding_test.go"), filepath.Join("internal", "testdata", "image_size_enum_encoding_test.go"))
 		})
 
-		t.Run("string", func(t *testing.T) {
-			t.Run("short", func(t *testing.T) {
-				exec.Command("cp", filepath.Join("internal", "color.go"), filepath.Join(outdir, "color.go")).Run()
+		t.Run("run tests within generated code", func(t *testing.T) {
+			from, _ := os.Getwd()
+			os.Chdir(testdir)
+			t.Cleanup(func() { os.Chdir(from) })
 
-				cmd := exec.Command(testbin, "--type", "ColorString", "--string")
-				cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(outdir, "color.go"), "GOLINE=18", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
-				cmd.Run()
+			os.WriteFile(filepath.Join(testdir, "go.mod"), []byte("module test\ngo 1.24"), 0644)
 
-				assertFile(t, "colorstring_enum_encoding.go")
-				assertFile(t, "colorstring_enum_encoding_test.go")
-				assertFile(t, "colorstring_enum_encoding_string_test.go")
-				assertFile(t, "colorstring_enum_encoding_json_test.go")
-			})
-
-			t.Run("long", func(t *testing.T) {
-				exec.Command("cp", filepath.Join("internal", "currency_string.go"), filepath.Join(outdir, "currency_string.go")).Run()
-
-				cmd := exec.Command(testbin, "--type", "CurrencyString", "--mode", "long", "--string")
-				cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(outdir, "currency_string.go"), "GOLINE=4", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
-				cmd.Run()
-
-				assertFile(t, "currencystring_enum_encoding.go")
-				assertFile(t, "currencystring_enum_encoding_test.go")
-				assertFile(t, "currencystring_enum_encoding_string_test.go")
-				assertFile(t, "currencystring_enum_encoding_json_test.go")
-			})
-
-			t.Run("custom method", func(t *testing.T) {
-				exec.Command("cp", filepath.Join("internal", "currency_string_custom.go"), filepath.Join(outdir, "currency_string_custom.go")).Run()
-
-				cmd := exec.Command(
-					testbin,
-					"--type", "CurrencyStringCustom",
-					"--mode", "long",
-					"--string",
-					"--encode-method", "MarshalTextName",
-					"--decode-method", "UnmarshalTextName",
-					"--string-method", "StringName",
-				)
-				cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(outdir, "currency_string_custom.go"), "GOLINE=4", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
-				cmd.Run()
-
-				assertFile(t, "currencystringcustom_enum_encoding.go")
-				assertFile(t, "currencystringcustom_enum_encoding_test.go")
-			})
-		})
-
-		t.Run("when multiple enums in same file, then file matches expected for each", func(t *testing.T) {
-			exec.Command("cp", filepath.Join("internal", "multiple.go"), filepath.Join(outdir, "multiple.go")).Run()
-
-			cmd := exec.Command(testbin, "--type", "Color2")
-			cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(outdir, "multiple.go"), "GOLINE=4", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
-			cmd.Run()
-
-			assertFile(t, "color2_enum_encoding.go")
-			assertFile(t, "color2_enum_encoding_test.go")
-			assertFile(t, "color2_enum_encoding_string_test.go")
-			assertFile(t, "color2_enum_encoding_json_test.go")
-
-			cmd = exec.Command(testbin, "--type", "Currency2")
-			cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(outdir, "multiple.go"), "GOLINE=12", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
-			cmd.Run()
-
-			assertFile(t, "currency2_enum_encoding.go")
-			assertFile(t, "currency2_enum_encoding_test.go")
-			assertFile(t, "currency2_enum_encoding_string_test.go")
-			assertFile(t, "currency2_enum_encoding_json_test.go")
+			if b, err := exec.Command("go", "test", ".").CombinedOutput(); err != nil {
+				t.Error(err, string(b))
+			}
 		})
 	})
 
 	t.Run("when bad go file, then error", func(t *testing.T) {
-		exec.Command("cp", filepath.Join("internal", "README.md"), filepath.Join(outdir, "README.md")).Run()
+		covdir := "cov_err_bad_file"
+		exec.Command("mkdir", covdir).Run()
+		covdirs = append(covdirs, covdir)
+
+		exec.Command("cp", filepath.Join("internal", "README.md"), filepath.Join(testdir, "README.md")).Run()
 
 		cmd := exec.Command(testbin, "--type", "Color")
-		cmd.Env = append(cmd.Environ(), "GOFILE=README.md", "GOLINE=5", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
+		cmd.Env = append(cmd.Environ(), "GOFILE=README.md", "GOLINE=5", "GOPACKAGE=image", "GOTESTDIR="+testdir, "GOCOVERDIR="+covdir)
 		if err := cmd.Run(); err == nil {
 			t.Fatal("must be error")
 		}
 	})
 
 	t.Run("when enum values not immediately after go:generate line, then error", func(t *testing.T) {
+		covdir := "cov_err_enum"
+		exec.Command("mkdir", covdir).Run()
+		covdirs = append(covdirs, covdir)
+
 		cmd := exec.Command(testbin, "--type", "Color")
-		cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(outdir, "color.go"), "GOLINE=1", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
+		cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(testdir, "image.go"), "GOLINE=1", "GOPACKAGE=image", "GOTESTDIR="+testdir, "GOCOVERDIR="+covdir)
 		if err := cmd.Run(); err == nil {
 			t.Fatal("must be error")
 		}
 	})
 
 	t.Run("when invalid package name, then error", func(t *testing.T) {
+		covdir := "cov_err_invalid_pkg"
+		exec.Command("mkdir", covdir).Run()
+		covdirs = append(covdirs, covdir)
+
 		cmd := exec.Command(testbin, "--type", "Color")
-		cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(outdir, "color.go"), "GOLINE=5", "GOPACKAGE=\"", "GOCOVERDIR="+coverdir)
+		cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(testdir, "image.go"), "GOLINE=5", "GOPACKAGE=\"", "GOTESTDIR="+testdir, "GOCOVERDIR="+covdir)
 		if err := cmd.Run(); err == nil {
 			t.Fatal("must be error")
 		}
 	})
 
 	t.Run("when not found file, then error", func(t *testing.T) {
+		covdir := "cov_err_file_not_found"
+		exec.Command("mkdir", covdir).Run()
+		covdirs = append(covdirs, covdir)
+
 		cmd := exec.Command(testbin, "--type", "Color")
-		cmd.Env = append(cmd.Environ(), "GOFILE=asdf.asdf", "GOPACKAGE=color", "GOLINE=5", "GOCOVERDIR="+coverdir)
+		cmd.Env = append(cmd.Environ(), "GOFILE=asdf.asdf", "GOPACKAGE=image", "GOLINE=5", "GOTESTDIR="+testdir, "GOCOVERDIR="+covdir)
 		if err := cmd.Run(); err == nil {
 			t.Fatal("must be error")
 		}
 	})
 
 	t.Run("when wrong params, then error", func(t *testing.T) {
+		covdir := "cov_err_wrong_params"
+		exec.Command("mkdir", covdir).Run()
+		covdirs = append(covdirs, covdir)
+
 		cmd := exec.Command(testbin)
-		cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(outdir, "color.go"), "GOLINE=5", "GOPACKAGE=color", "GOCOVERDIR="+coverdir)
+		cmd.Env = append(cmd.Environ(), "GOFILE="+filepath.Join(testdir, "image.go"), "GOLINE=5", "GOPACKAGE=color", "GOTESTDIR="+testdir, "GOCOVERDIR="+covdir)
 		if err := cmd.Run(); err == nil {
 			t.Fatal("must be error")
 		}
@@ -176,9 +136,19 @@ func TestMain(t *testing.T) {
 }
 
 func assertEqFile(t *testing.T, a, b string) {
-	fa, _ := os.ReadFile(a)
-	fb, _ := os.ReadFile(b)
+	t.Helper()
+	fa, err := os.ReadFile(a)
+	if err != nil {
+		t.Error(err)
+	}
+	fb, err := os.ReadFile(b)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(fa) == 0 || len(fb) == 0 {
+		t.Error("empty file: " + a + " or " + b)
+	}
 	if string(fa) != string(fb) {
-		t.Error("files are different (" + a + " <> " + b + "), " + string(fa) + " <> " + string(fb))
+		t.Error("files different: " + a + " != " + b + ": " + string(fa) + " <> " + string(fb))
 	}
 }

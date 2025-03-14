@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	_ "embed"
 	"errors"
 	"flag"
@@ -13,86 +12,41 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 //go:embed enum.go.template
-var templateCode string
-
-//go:embed enum_short.go.template
-var templateShortCode string
+var templateEnum string
 
 //go:embed enum_test.go.template
-var templateTest []byte
-
-//go:embed enum_json_test.go.template
-var templateJSONTest []byte
+var templateEnumTest string
 
 //go:embed enum_string.go.template
 var templateString string
 
-//go:embed enum_string_short.go.template
-var templateStringShort string
-
 //go:embed enum_string_test.go.template
-var templateStringTest []byte
+var templateStringTest string
 
 func main() {
 	var (
 		typeName     string
-		mode         string
 		enableString bool
-		encodeMethod string
-		decodeMethod string
-		stringMethod string
 		fileName     = os.Getenv("GOFILE")
 		lineNum      = os.Getenv("GOLINE")
 		packageName  = os.Getenv("GOPACKAGE")
 	)
 	flag.StringVar(&typeName, "type", "", "type to be generated for")
-	flag.StringVar(&mode, "mode", "auto", "what kind of strategy used (short, long, auto)")
-	flag.StringVar(&encodeMethod, "encode-method", "MarshalText", "name of method to use for text encoding")
-	flag.StringVar(&decodeMethod, "decode-method", "UnmarshalText", "name of method to use for text decoding")
-	flag.StringVar(&stringMethod, "string-method", "String", "name of method to use for string")
 	flag.BoolVar(&enableString, "string", false, "generate String() method")
 	flag.Parse()
 
-	if err := process(typeName, fileName, lineNum, packageName, mode, encodeMethod, decodeMethod, stringMethod, enableString); err != nil {
+	if err := process(packageName, fileName, typeName, lineNum, enableString); err != nil {
 		os.Stderr.WriteString(err.Error())
 		os.Exit(1)
 	}
 }
 
-type replacer struct {
-	vals  map[string]string
-	specs [][2]string
-}
-
-func (r *replacer) With(k, v string) *replacer {
-	r.vals[k] = v
-	return r
-}
-
-func (r *replacer) WithMap(k string, f func(idx int, val [2]string) string, sep string) *replacer {
-	var b strings.Builder
-	for i, v := range r.specs {
-		if i > 0 {
-			b.WriteString(sep)
-		}
-		b.WriteString(f(i, v))
-	}
-	r.vals[k] = b.String()
-	return r
-}
-
-func (r *replacer) Apply(s []byte) []byte {
-	for k, v := range r.vals {
-		s = bytes.ReplaceAll(s, []byte(k), []byte(v))
-	}
-	return []byte(s)
-}
-
-func process(typeName, fileName, lineNum, packageName, mode, encodeMethod, decodeMethod, stringMethod string, enableString bool) error {
-	if typeName == "" || fileName == "" || packageName == "" || lineNum == "" || encodeMethod == "" || decodeMethod == "" || stringMethod == "" {
+func process(packageName, fileName, typeName, lineNum string, enableString bool) error {
+	if typeName == "" || fileName == "" || packageName == "" || lineNum == "" {
 		return errors.New("missing parameters")
 	}
 
@@ -114,18 +68,17 @@ func process(typeName, fileName, lineNum, packageName, mode, encodeMethod, decod
 
 	ast.Inspect(f, func(astNode ast.Node) bool {
 		node, ok := astNode.(*ast.GenDecl)
-		if !ok || (node.Tok != token.CONST && node.Tok != token.VAR) {
+		if !ok || node == nil || (node.Tok != token.CONST && node.Tok != token.VAR) {
 			return true
 		}
 
-		position := fset.Position(node.Pos())
-		if position.Line != expectedLine {
+		if position := fset.Position(node.Pos()); position.Line != expectedLine {
 			return false
 		}
 
 		for _, astSpec := range node.Specs {
 			spec, ok := astSpec.(*ast.ValueSpec)
-			if !ok {
+			if !ok || spec == nil {
 				continue
 			}
 
@@ -152,68 +105,47 @@ func process(typeName, fileName, lineNum, packageName, mode, encodeMethod, decod
 		return errors.New(fileName + ": unable to find values for enum type: " + typeName)
 	}
 
-	r := (&replacer{vals: make(map[string]string), specs: specs}).
-		With("{{.Type}}", typeName).
-		With("{{.Package}}", packageName).
-		With("{{.EncodeMethod}}", encodeMethod).
-		With("{{.DecodeMethod}}", decodeMethod).
-		With("{{.StringMethod}}", stringMethod).
-		WithMap("{{.Values}}", func(_ int, v [2]string) string { return v[0] }, ", ").
-		WithMap("{{.Tags}}", func(_ int, v [2]string) string { return `"` + v[1] + `"` }, ",").
-		WithMap("{{.TagsNaked}}", func(_ int, v [2]string) string { return v[1] }, " ").
-		WithMap("{{.seq_bytes}}", func(_ int, v [2]string) string { return `[]byte("` + v[1] + `")` }, ", ").
-		WithMap("{{.seq_string}}", func(_ int, v [2]string) string { return `"` + v[1] + `"` }, ", ")
-
-	code := templateCode
-
-	if mode == "auto" {
-		mode = "short"
-		if len(specs) >= 10 {
-			mode = "long"
-		}
-	}
-
-	if mode == "short" {
-		code = templateShortCode
-		if enableString {
-			code += "\n" + templateStringShort
-		}
-		r = r.
-			WithMap("{{.string_to_value_switch}}", func(_ int, v [2]string) string { return `case "` + v[1] + "\":\n *s = " + v[0] }, "\n").
-			WithMap("{{.value_to_bytes_switch}}", func(i int, v [2]string) string {
-				return `case ` + v[0] + ":\n return seq_bytes_" + typeName + "[" + strconv.Itoa(i) + `], nil`
-			}, "\n").
-			WithMap("{{.value_to_string_switch}}", func(i int, v [2]string) string {
-				return `case ` + v[0] + ":\n return seq_string_" + typeName + "[" + strconv.Itoa(i) + `]`
-			}, "\n")
-	} else {
-		r = r.
-			WithMap("{{.string_to_value_map}}", func(_ int, v [2]string) string { return `"` + v[1] + `": ` + v[0] + `,` }, "\n").
-			WithMap("{{.value_to_string_map}}", func(_ int, v [2]string) string { return v[0] + `: "` + v[1] + `",` }, "\n").
-			WithMap("{{.value_to_bytes_map}}", func(_ int, v [2]string) string { return v[0] + `: []byte("` + v[1] + `"),` }, "\n")
-		if enableString {
-			code += "\n" + templateString
-		}
-	}
-
-	bastPath := filepath.Join(filepath.Dir(fileName), strings.ToLower(typeName))
-
+	templateCode := templateEnum
+	templateTest := templateEnumTest
 	if enableString {
-		if err := writeCode(r.Apply(templateStringTest), bastPath+"_enum_encoding_sting_test.go"); err != nil {
-			return err
-		}
+		templateCode += "\n" + templateString
+		templateTest += "\n" + templateStringTest
 	}
 
-	if decodeMethod == "UnmarshalText" && encodeMethod == "MarshalText" {
-		if err := writeCode(r.Apply(templateJSONTest), bastPath+"_enum_encoding_json_test.go"); err != nil {
-			return err
-		}
-	}
+	replacer := strings.NewReplacer(
+		"{{.Type}}", typeName,
+		"{{.Package}}", packageName,
+		"{{.Values}}", mapJoin(specs, func(_ int, v [2]string) string { return v[0] }, ", "),
+		"{{.Tags}}", mapJoin(specs, func(_ int, v [2]string) string { return `"` + v[1] + `"` }, ","),
+		"{{.TagsNaked}}", mapJoin(specs, func(_ int, v [2]string) string { return v[1] }, " "),
+		"{{.seq_bytes}}", mapJoin(specs, func(_ int, v [2]string) string { return `[]byte("` + v[1] + `")` }, ", "),
+		"{{.seq_string}}", mapJoin(specs, func(_ int, v [2]string) string { return `"` + v[1] + `"` }, ", "),
+		"{{.string_to_value_switch}}", mapJoin(specs, func(_ int, v [2]string) string { return `case "` + v[1] + "\":\n *s = " + v[0] }, "\n"),
+		"{{.value_to_append_bytes_switch}}", mapJoin(specs, func(i int, v [2]string) string {
+			return `case ` + v[0] + ":\n return append(b, seq_bytes_" + typeName + "[" + strconv.Itoa(i) + `]...), nil`
+		}, "\n"),
+		"{{.value_to_string_switch}}", mapJoin(specs, func(i int, v [2]string) string {
+			return `case ` + v[0] + ":\n return seq_string_" + typeName + "[" + strconv.Itoa(i) + `]`
+		}, "\n"),
+	)
+
+	bastPath := filepath.Join(filepath.Dir(fileName), camelCaseToSnakeCase(typeName))
 
 	return errors.Join(
-		writeCode(r.Apply([]byte(code)), bastPath+"_enum_encoding.go"),
-		writeCode(r.Apply(templateTest), bastPath+"_enum_encoding_test.go"),
+		writeCode([]byte(replacer.Replace(templateCode)), bastPath+"_enum_encoding.go"),
+		writeCode([]byte(replacer.Replace(templateTest)), bastPath+"_enum_encoding_test.go"),
 	)
+}
+
+func mapJoin(vs [][2]string, f func(idx int, val [2]string) string, sep string) string {
+	var b strings.Builder
+	for i, v := range vs {
+		if i > 0 {
+			b.WriteString(sep)
+		}
+		b.WriteString(f(i, v))
+	}
+	return b.String()
 }
 
 func writeCode(code []byte, outFilePath string) error {
@@ -222,4 +154,22 @@ func writeCode(code []byte, outFilePath string) error {
 		return err
 	}
 	return os.WriteFile(outFilePath, formattedCode, 0644)
+}
+
+func camelCaseToSnakeCase(s string) string {
+	var b strings.Builder
+	var isPrevUpper bool
+	for i, r := range s {
+		if unicode.IsUpper(r) {
+			if i > 0 && !isPrevUpper {
+				b.WriteRune('_')
+			}
+			isPrevUpper = true
+			b.WriteRune(unicode.ToLower(r))
+		} else {
+			isPrevUpper = false
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
 }

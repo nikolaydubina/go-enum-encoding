@@ -14,8 +14,8 @@ go install github.com/nikolaydubina/go-enum-encoding@latest
 > `v1.8.2` is the last version that supports go1.23 or bellow
 
 * 200 LOC
-* simple, fast[^1], strict[^1]
-* generates encoding/decoding, tests and benchmarks
+* simple, fast, strict
+* generates encoding/decoding, tests, benchmarks
 
 ```go
 type Color struct{ c uint8 }
@@ -43,57 +43,26 @@ const (
 )
 ```
 
-## Related Work and References
-
-- http://github.com/zarldev/goenums - does much more advanced struct generation, generates all enum utilities besides encoding, does not generate tests, uses similar notation to trigger go:generate but with different comment directives (non-json field tags)
-
-
-<details><summary>Appendix: Performance</summary>
-
-@mishak87 [proposed](https://github.com/nikolaydubina/go-enum-encoding/issues/19) to use array instead of map for performance.
-Similarly, @nikolaydubina faced degradation in performance for loop based array for large enum sets (256 values) while working on fpmoney[^2] and iso4217[^3].
+Generated benchmarks:
 
 ```bash
-$ go test -bench=Benchmark -benchmem ./internal/research/map >  map.bench
-$ go test -bench=Benchmark -benchmem ./internal/research/inline > inline.bench
-$ go test -bench=Benchmark -benchmem ./internal/research/array-loop > array-loop.bench 
-$ go test -bench=Benchmark -benchmem ./internal/research/array-index > array-index.bench
-$ go test -bench=Benchmark -benchmem ./internal/research/uint-array > uint-array.bench
-$ go test -bench=Benchmark -benchmem ./internal/research/uint-inline > uint-inline.bench
-$ benchstat -split="XYZ" map.bench inline.bench array-loop.bench array-index.bench uint-array.bench uint-inline.bench
-name \ time/op          map.bench    inline.bench  array-loop.bench  array-index.bench  uint-array.bench  uint-inline.bench
-MarshalText_Color-16    22.3ns ± 0%    5.3ns ± 0%        7.5ns ± 0%         2.2ns ± 0%        1.9ns ± 0%         5.0ns ± 0%
-UnmarshalText_Color-16  11.9ns ± 0%    5.7ns ± 0%       14.5ns ± 0%        11.8ns ± 0%       14.3ns ± 0%         5.7ns ± 0%
-
-name \ alloc/op         map.bench    inline.bench  array-loop.bench  array-index.bench  uint-array.bench  uint-inline.bench
-MarshalText_Color-16     0.00B         0.00B             0.00B              0.00B             0.00B              0.00B     
-UnmarshalText_Color-16   0.00B         0.00B             0.00B              0.00B             0.00B              0.00B     
-
-name \ allocs/op        map.bench    inline.bench  array-loop.bench  array-index.bench  uint-array.bench  uint-inline.bench
-MarshalText_Color-16      0.00          0.00              0.00               0.00              0.00               0.00     
-UnmarshalText_Color-16    0.00          0.00              0.00               0.00              0.00               0.00 
+$ go test -bench=. -benchmem .                  
+goos: darwin
+goarch: arm64
+pkg: github.com/nikolaydubina/go-enum-encoding/internal/testdata
+cpu: Apple M3 Max
+BenchmarkColor_UnmarshalText-16         752573839                1.374 ns/op           0 B/op          0 allocs/op
+BenchmarkColor_AppendText-16            450123993                2.676 ns/op           0 B/op          0 allocs/op
+BenchmarkColor_MarshalText-16           80059376                13.68 ns/op            8 B/op          1 allocs/op
+BenchmarkImageSize_UnmarshalText-16     751743885                1.601 ns/op           0 B/op          0 allocs/op
+BenchmarkImageSize_AppendText-16        500286883                2.402 ns/op           0 B/op          0 allocs/op
+BenchmarkImageSize_MarshalText-16       81467318                16.46 ns/op            8 B/op          1 allocs/op
+BenchmarkImageSize_String-16            856463289                1.330 ns/op           0 B/op          0 allocs/op
+PASS
+ok      github.com/nikolaydubina/go-enum-encoding/internal/testdata     8.561s
 ```
 
-</details>
+## References
 
-<details><summary>Appendix: Stringer</summary>
-
-`String() string` method is very similar to encoding, howver it does not return error and returns `string` instead of `[]byte`.
-To avoid malloc and convenience, stringer option is added to generate it accompanied with tests and benchmarks.
-First used in [tailscale](https://github.com/tailscale/tailscale/pull/13270).
-
-</details>
-
-</details>
-
-<details><summary>Appendix: Custom Methods</summary>
-
-Some enums are encoded directly as underlying basic type, however they have dual custom use through `String() string` methods and alike.
-To assist safe migration, custom encode and decode method names are added.
-First used in [tailscale](https://github.com/tailscale/tailscale/pull/13270).
-
-</details>
-
-[^1]: Comparison to other enums methods: http://github.com/nikolaydubina/go-enum-example
-[^2]: iso4217 enums performance loop vs map: https://github.com/ferdypruis/iso4217/issues/4
-[^3]: fpmoney: https://github.com/nikolaydubina/fpmoney?tab=readme-ov-file#appendix-a-jsonunmarshal-optimizations
+- http://github.com/zarldev/goenums - does much more advanced struct generation, generates all enum utilities besides encoding, does not generate tests, uses similar notation to trigger go:generate but with different comment directives (non-json field tags)
+- http://github.com/nikolaydubina/go-enum-example

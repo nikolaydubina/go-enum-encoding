@@ -1,4 +1,4 @@
-package color
+package image
 
 type Color struct{ c uint8 }
 
@@ -14,10 +14,11 @@ type V struct {
 	Color Color `json:"color"`
 }
 
-type ColorString int
+type ImageSize uint8
 
 const (
-	RedS   ColorString = iota // json:"red"
-	GreenS                    // json:"green"
-	BlueS                     // json:"blue"
+	UndefinedSize ImageSize = iota // json:""
+	Small                          // json:"small"
+	Large                          // json:"large"
+	XLarge                         // json:"xlarge"
 )
