@@ -19,11 +19,12 @@ jobs:
       - name: Set up Go 1.x
         uses: actions/setup-go@v5
         with:
-          go-version: ^1.24
+          go-version: ^1.25
 
       - name: test
         env:
           GOCOVERPROFILE: coverage.out
+          GOEXPERIMENT: jsonv2 
         run: go test ./...
 
       - name: upload coverage to Codecov
