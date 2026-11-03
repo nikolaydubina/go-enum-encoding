@@ -1,3 +1,3 @@
 module github.com/nikolaydubina/go-enum-encoding
 
-go 1.25
+go 1.27

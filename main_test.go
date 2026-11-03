@@ -18,11 +18,13 @@ func TestMain(t *testing.T) {
 		t.Fatal(err, string(b))
 	}
 
-	defer func() {
-		if b, err := exec.Command("go", "tool", "covdata", "textfmt", "-i="+strings.Join(covdirs, ","), "-o", os.Getenv("GOCOVERPROFILE")).CombinedOutput(); err != nil {
-			t.Error(err, string(b))
-		}
-	}()
+	if covprofile := os.Getenv("GOCOVERPROFILE"); covprofile != "" {
+		defer func() {
+			if b, err := exec.Command("go", "tool", "covdata", "textfmt", "-i="+strings.Join(covdirs, ","), "-o", covprofile).CombinedOutput(); err != nil {
+				t.Error(err, string(b))
+			}
+		}()
+	}
 
 	t.Run("ok", func(t *testing.T) {
 		if b, err := exec.Command("cp", filepath.Join("internal", "testdata", "image.go"), filepath.Join(testdir, "image.go")).CombinedOutput(); err != nil {
