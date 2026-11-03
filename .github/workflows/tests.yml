@@ -13,22 +13,15 @@ jobs:
     name: Tests
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: checkout
         uses: actions/checkout@v4
 
-      - name: Set up Go 1.x
+      - name: go
         uses: actions/setup-go@v5
         with:
           go-version: ^1.25
 
       - name: test
         env:
-          GOCOVERPROFILE: coverage.out
           GOEXPERIMENT: jsonv2 
         run: go test ./...
-
-      - name: upload coverage to Codecov
-        uses: codecov/codecov-action@v4.1.1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage.out
